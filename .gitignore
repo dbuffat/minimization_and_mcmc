@@ -1,0 +1,19 @@
+# Fichiers et répertoires Python
+__pycache__/
+
+# Distribution/paquets Python
+build/
+dist/
+.pytest_cache/
+*.egg-info/
+.eggs/
+.coverage
+
+# Autres fichiers spécifiques au projet
+docs/_build/
+htmlcov/
+tests/*/
+tp1_pkg/*.csv
+*.csv
+results_ligo/
+*/results_ligo/
