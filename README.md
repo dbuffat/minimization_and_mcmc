@@ -1,6 +1,5 @@
 # TP2 - Inférence Bayésienne - MCMC
 
-
 # Contents:
 
 - [README](#readme)
@@ -8,6 +7,7 @@
 - [Installation](#installation)
 - [Utilisation](#bruitblanc)
 - [Contributions](#contributions)
+- [Contributeurs](#contributeurs)
 - [License](#license)
 - [Documentation](#documentation)
 - [Réponses aux Questions](#reponse-aux-questions)
@@ -26,7 +26,7 @@ Le logiciel répond aux questions du TP2, sur la détection de surdensité, et l
 1. Clonez le dépôt GitHub :
    
     ```bash
-    $ git clone git@gitlab.in2p3.fr:dimitri.buffat/m2cosmo_tp2.git
+    $ git clone git@github.com:dbuffat/minimization_and_mcmc.git
     ```
    
 2. Allez dans le dossier du package :
