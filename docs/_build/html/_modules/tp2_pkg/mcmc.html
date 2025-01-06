@@ -1,0 +1,888 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="fr" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tp2_pkg.mcmc &mdash; Documentation TP2 - Inférences et MCMC fr</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../_static/custom.css" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=de646d1a"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../_static/translations.js?v=e6b791cb"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Recherche" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            TP2 - Inférences et MCMC
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Rechercher docs" aria-label="Rechercher docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../tp2_pkg.html">tp2_pkg package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">tp2_pkg</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../rep.html">Réponse aux Questions</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">TP2 - Inférences et MCMC</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Code du module</a></li>
+      <li class="breadcrumb-item active">tp2_pkg.mcmc</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Code source de tp2_pkg.mcmc</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">emcee</span> <span class="k">as</span> <span class="nn">emc</span>
+<span class="kn">from</span> <span class="nn">getdist</span> <span class="kn">import</span> <span class="n">MCSamples</span><span class="p">,</span> <span class="n">plots</span>
+<span class="kn">from</span> <span class="nn">tp2_pkg</span> <span class="kn">import</span> <span class="n">minimisation</span> <span class="k">as</span> <span class="n">mini</span>
+
+
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">codecarbon</span> <span class="k">as</span> <span class="nn">cc</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="n">version</span> <span class="o">=</span> <span class="s2">&quot;1.0&quot;</span>
+
+<span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;codecarbon&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">disabled</span> <span class="o">=</span> <span class="kc">True</span>
+
+<div class="viewcode-block" id="MCMC">
+<a class="viewcode-back" href="../../tp2_pkg.html#tp2_pkg.mcmc.MCMC">[docs]</a>
+<span class="k">class</span> <span class="nc">MCMC</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Classe pour l&#39;exécution d&#39;une analyse MCMC sur un modèle de données. Cette classe inclut des méthodes pour </span>
+<span class="sd">    l&#39;échantillonnage MCMC, la convergence des chaînes, l&#39;autocorrélation, ainsi que la gestion du suivi du temps et </span>
+<span class="sd">    de l&#39;empreinte carbone associée aux calculs.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    data_fit : object</span>
+<span class="sd">        Instance de la classe Minimisation contenant les données à ajuster et le modèle de base.</span>
+<span class="sd">    psigma : numpy.ndarray</span>
+<span class="sd">        Sigma initiale pour les propositions de nouveaux paramètres dans l&#39;échantillonnage.</span>
+<span class="sd">    theta_current : numpy.ndarray</span>
+<span class="sd">        Valeurs actuelles des paramètres du modèle lors de l&#39;échantillonnage.</span>
+<span class="sd">    theta_new : numpy.ndarray</span>
+<span class="sd">        Valeurs proposées des paramètres du modèle à chaque itération.</span>
+<span class="sd">    sampler_theta : numpy.ndarray</span>
+<span class="sd">        Chaîne des paramètres échantillonnés après le MCMC.</span>
+<span class="sd">    sampler : emcee.EnsembleSampler</span>
+<span class="sd">        L&#39;échantillonneur MCMC utilisant l&#39;algorithme de l&#39;ensemble de chaînes de Markov (emcee).</span>
+<span class="sd">    sampler_chain : numpy.ndarray</span>
+<span class="sd">        Chaîne d&#39;échantillons obtenus après avoir effectué un sous-échantillonnage de la chaîne MCMC.</span>
+<span class="sd">    autocorr_func : numpy.ndarray</span>
+<span class="sd">        Fonction d&#39;autocorrélation calculée pour chaque chaîne et chaque paramètre.</span>
+<span class="sd">    conv : numpy.ndarray</span>
+<span class="sd">        Valeurs de convergence pour chaque paramètre.</span>
+<span class="sd">    ndim : int</span>
+<span class="sd">        Nombre de dimensions des paramètres du modèle.</span>
+<span class="sd">    nwalkers : int</span>
+<span class="sd">        Nombre de &quot;walkers&quot; (chaînes) utilisées dans l&#39;échantillonnage MCMC.</span>
+<span class="sd">    nech : int</span>
+<span class="sd">        Nombre d&#39;itérations (pas) dans l&#39;échantillonnage MCMC.</span>
+<span class="sd">    burn_in : int</span>
+<span class="sd">        Période de &quot;burn-in&quot; des échantillons à ignorer pour l&#39;analyse finale.</span>
+<span class="sd">    pas_inde : numpy.ndarray</span>
+<span class="sd">        Seuils d&#39;indépendance pour chaque paramètre en fonction de l&#39;autocorrélation.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+<div class="viewcode-block" id="MCMC.__init__">
+<a class="viewcode-back" href="../../tp2_pkg.html#tp2_pkg.mcmc.MCMC.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">init_sigma</span><span class="p">,</span> <span class="n">multi_chain</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialisation de la classe MCMC.        </span>
+
+<span class="sd">        Description</span>
+<span class="sd">        -----------</span>
+<span class="sd">        Cette méthode initialise l&#39;instance de la classe, charge les données, et prépare les configurations nécessaires </span>
+<span class="sd">        pour l&#39;analyse MCMC.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        init_sigma : numpy.ndarray</span>
+<span class="sd">            Valeurs initiales de sigma pour les propositions de nouveaux paramètres.</span>
+
+<span class="sd">        Return</span>
+<span class="sd">        ------</span>
+<span class="sd">        None</span>
+<span class="sd">            Cette méthode ne retourne rien.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data_fit</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">psigma</span> <span class="o">=</span> <span class="n">init_sigma</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">multi_chain</span> <span class="o">=</span> <span class="n">multi_chain</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">theta_current</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">theta_new</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sampler_theta</span> <span class="o">=</span> <span class="kc">None</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">sampler</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sampler_chain</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">autocorr_func</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">conv</span> <span class="o">=</span> <span class="kc">None</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">ndim</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nwalkers</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nech</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">burn_in</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pas_inde</span> <span class="o">=</span> <span class="kc">None</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">__compile_data</span><span class="p">()</span></div>
+
+        
+    <span class="k">def</span> <span class="nf">__compile_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Charge et prépare les données nécessaires à l&#39;analyse MCMC.</span>
+<span class="sd">        </span>
+<span class="sd">        Description</span>
+<span class="sd">        -----------</span>
+<span class="sd">        Cette méthode crée une instance de la classe Minimisation et charge les données à ajuster. Elle </span>
+<span class="sd">        initialise aussi les valeurs de paramètres `theta_new` à partir de l&#39;ajustement initial.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">            None</span>
+<span class="sd">            Cette méthode ne prend pas de paramètre.</span>
+<span class="sd">        </span>
+<span class="sd">        Return</span>
+<span class="sd">        ------</span>
+<span class="sd">        None</span>
+<span class="sd">            Cette méthode ne retourne rien.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data_fit</span> <span class="o">=</span> <span class="n">mini</span><span class="o">.</span><span class="n">Minimisation</span><span class="p">()</span>
+        <span class="c1">#self.data_fit.Main()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">theta_new</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_fit</span><span class="o">.</span><span class="n">popt</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ndim</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">theta_new</span><span class="p">)</span>
+        
+<div class="viewcode-block" id="MCMC.Main_mcmc">
+<a class="viewcode-back" href="../../tp2_pkg.html#tp2_pkg.mcmc.MCMC.Main_mcmc">[docs]</a>
+    <span class="k">def</span> <span class="nf">Main_mcmc</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Gère l&#39;exécution principale de l&#39;algorithme MCMC avec suivi des émissions de CO2.</span>
+
+<span class="sd">        Description</span>
+<span class="sd">        -----------</span>
+<span class="sd">        Cette méthode exécute l&#39;algorithme Metropolis-Hastings, soit en mode multi-chaînes </span>
+<span class="sd">        (`multi_chain=True`) soit en mode simple chaîne (`multi_chain=False`). Pendant l&#39;exécution, </span>
+<span class="sd">        elle utilise le tracker d&#39;émissions de CO2 pour mesurer l&#39;empreinte carbone générée par </span>
+<span class="sd">        le calcul. À la fin, elle affiche les émissions estimées et génère les graphiques associés.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">            None</span>
+<span class="sd">            Cette méthode ne prend pas de paramètre.</span>
+
+<span class="sd">        Return</span>
+<span class="sd">        ------</span>
+<span class="sd">        None</span>
+<span class="sd">            Cette méthode ne retourne rien.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">tracker</span> <span class="o">=</span> <span class="n">cc</span><span class="o">.</span><span class="n">EmissionsTracker</span><span class="p">(</span><span class="n">save_to_file</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">multi_chain</span><span class="p">:</span>
+            <span class="n">tracker</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__multi_metropolis_hastings</span><span class="p">()</span>
+            <span class="n">emission</span> <span class="o">=</span> <span class="n">tracker</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">CO2 generer pour notre MCMC : </span><span class="si">{</span><span class="n">emission</span><span class="si">}</span><span class="s2"> kg.</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">tracker</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__metropolis_hastings</span><span class="p">()</span>
+            <span class="n">emission</span> <span class="o">=</span> <span class="n">tracker</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">CO2 generer pour notre MCMC : </span><span class="si">{</span><span class="n">emission</span><span class="o">*</span><span class="mi">10</span><span class="si">}</span><span class="s2"> kg.</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">PlotMCMC</span><span class="p">()</span></div>
+
+        
+<div class="viewcode-block" id="MCMC.Main_emcee">
+<a class="viewcode-back" href="../../tp2_pkg.html#tp2_pkg.mcmc.MCMC.Main_emcee">[docs]</a>
+    <span class="k">def</span> <span class="nf">Main_emcee</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Gère l&#39;exécution principale de l&#39;algorithme emcee avec suivi des émissions de CO2.</span>
+
+<span class="sd">        Description</span>
+<span class="sd">        -----------</span>
+<span class="sd">        Cette méthode exécute l&#39;algorithme MCMC basé sur `emcee`. Elle suit les émissions de CO2 </span>
+<span class="sd">        générées pendant l&#39;exécution à l&#39;aide d&#39;un tracker. Après le calcul, elle effectue des </span>
+<span class="sd">        analyses supplémentaires, notamment la convergence, l&#39;autocorrélation, la sélection des </span>
+<span class="sd">        échantillons, et la génération des distributions de paramètres, avant de superposer </span>
+<span class="sd">        les distributions.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">            None</span>
+<span class="sd">            Cette méthode ne prend pas de paramètre.</span>
+
+<span class="sd">        Return</span>
+<span class="sd">        ------</span>
+<span class="sd">        None</span>
+<span class="sd">            Cette méthode ne retourne rien.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">tracker</span> <span class="o">=</span> <span class="n">cc</span><span class="o">.</span><span class="n">EmissionsTracker</span><span class="p">(</span><span class="n">save_to_file</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">tracker</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__mcmc_emcee</span><span class="p">()</span>
+        <span class="n">emission</span> <span class="o">=</span> <span class="n">tracker</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;CO2 generer pour MCMC emcee : </span><span class="si">{</span><span class="n">emission</span><span class="si">}</span><span class="s2"> kg.&quot;</span><span class="p">)</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">__convergence</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__autocorr</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">PlotAutoCorr</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__selection</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">GetDist</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">SuperposeDist</span><span class="p">()</span></div>
+
+
+    <span class="k">def</span> <span class="nf">__function_proposal</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Propose de nouveaux paramètres en fonction de la distribution normale autour des valeurs actuelles.</span>
+<span class="sd">        </span>
+<span class="sd">        Description</span>
+<span class="sd">        -----------</span>
+<span class="sd">        Cette méthode génère de nouvelles valeurs pour les paramètres `theta_new` en utilisant une distribution normale </span>
+<span class="sd">        centrée sur les valeurs actuelles des paramètres, avec un écart-type défini par `psigma`.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">            None</span>
+<span class="sd">            Cette méthode ne prend pas de paramètre.</span>
+<span class="sd">        </span>
+<span class="sd">        Return</span>
+<span class="sd">        ------</span>
+<span class="sd">        None</span>
+<span class="sd">            Cette méthode ne retourne rien.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">theta_new</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">theta_new</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">psigma</span><span class="p">)</span>
+    
+    <span class="k">def</span> <span class="nf">__update_theta</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Met à jour les valeurs des paramètres du modèle en fonction de la proposition.</span>
+<span class="sd">        </span>
+<span class="sd">        Description</span>
+<span class="sd">        -----------</span>
+<span class="sd">        Cette méthode copie les valeurs actuelles des paramètres dans `theta_current` et propose ensuite de nouvelles </span>
+<span class="sd">        valeurs pour les paramètres à l&#39;aide de la méthode `__function_proposal`.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">            None</span>
+<span class="sd">            Cette méthode ne prend pas de paramètre.</span>
+<span class="sd">        </span>
+<span class="sd">        Return</span>
+<span class="sd">        ------</span>
+<span class="sd">        None</span>
+<span class="sd">            Cette méthode ne retourne rien.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">theta_current</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">theta_new</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__function_proposal</span><span class="p">()</span>
+        
+    <span class="k">def</span> <span class="nf">__backup_theta</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Sauvegarde l&#39;état actuel des paramètres du modèle.</span>
+<span class="sd">        </span>
+<span class="sd">        Description</span>
+<span class="sd">        -----------</span>
+<span class="sd">        Cette méthode crée une copie des paramètres actuels dans `theta_current` pour les restaurer en cas de rejet </span>
+<span class="sd">        de la proposition de nouveaux paramètres.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">            None</span>
+<span class="sd">            Cette méthode ne prend pas de paramètre.</span>
+<span class="sd">        </span>
+<span class="sd">        Return</span>
+<span class="sd">        ------</span>
+<span class="sd">        None</span>
+<span class="sd">            Cette méthode ne retourne rien.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">theta_new</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">theta_current</span><span class="p">)</span>
+    
+    <span class="k">def</span> <span class="nf">__log_prior</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">theta</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calcule la probabilité a priori des paramètres du modèle.</span>
+<span class="sd">        </span>
+<span class="sd">        Description</span>
+<span class="sd">        -----------</span>
+<span class="sd">        Cette méthode évalue la probabilité a priori des paramètres `theta` en fonction de leurs limites. Si un ou </span>
+<span class="sd">        plusieurs paramètres sont en dehors des limites spécifiées, la probabilité est renvoyée comme `-np.inf`.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        theta : numpy.ndarray, optional</span>
+<span class="sd">            Les paramètres pour lesquels calculer la probabilité a priori. Si `None`, utilise `theta_new`.</span>
+<span class="sd">        </span>
+<span class="sd">        Return</span>
+<span class="sd">        ------</span>
+<span class="sd">        float</span>
+<span class="sd">            La probabilité a priori des paramètres `theta`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">theta</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">cdt_p0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">theta_new</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">theta_new</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mf">0.015</span>
+            <span class="n">cdt_rp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">theta_new</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">theta_new</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">1500</span>
+            <span class="n">cdt_A</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">theta_new</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">theta_new</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mf">0.03</span>
+            <span class="n">cdt_mu</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">theta_new</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">1450</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">theta_new</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">1600</span>
+            <span class="n">cdt_sigma</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">theta_new</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">200</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">theta_new</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">350</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">cdt_p0</span> <span class="o">=</span> <span class="n">theta</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">theta</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mf">0.015</span>
+            <span class="n">cdt_rp</span> <span class="o">=</span> <span class="n">theta</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">theta</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">1500</span>
+            <span class="n">cdt_A</span> <span class="o">=</span> <span class="n">theta</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">theta</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mf">0.03</span>
+            <span class="n">cdt_mu</span> <span class="o">=</span> <span class="n">theta</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">1450</span> <span class="ow">and</span> <span class="n">theta</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">1600</span>
+            <span class="n">cdt_sigma</span> <span class="o">=</span> <span class="n">theta</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">200</span> <span class="ow">and</span> <span class="n">theta</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">350</span>
+
+        <span class="k">if</span> <span class="n">cdt_p0</span> <span class="ow">and</span> <span class="n">cdt_rp</span> <span class="ow">and</span> <span class="n">cdt_A</span> <span class="ow">and</span> <span class="n">cdt_mu</span> <span class="ow">and</span> <span class="n">cdt_sigma</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mi">0</span>
+        
+        <span class="k">return</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span>
+    
+    <span class="k">def</span> <span class="nf">__log_likelihood</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">theta</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calcule la vraisemblance du modèle en fonction des données observées.</span>
+<span class="sd">        </span>
+<span class="sd">        Description</span>
+<span class="sd">        -----------</span>
+<span class="sd">        Cette méthode évalue la vraisemblance du modèle en utilisant le chi-carré entre les données observées et </span>
+<span class="sd">        le modèle avec les paramètres `theta`.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        theta : numpy.ndarray, optional</span>
+<span class="sd">            Les paramètres pour lesquels calculer la vraisemblance. Si `None`, utilise `theta_new`.</span>
+<span class="sd">        </span>
+<span class="sd">        Return</span>
+<span class="sd">        ------</span>
+<span class="sd">        float</span>
+<span class="sd">            La vraisemblance du modèle avec les paramètres `theta`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">theta</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data_fit</span><span class="o">.</span><span class="n">_model</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_fit</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;r&#39;</span><span class="p">],</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">theta_new</span><span class="p">)</span>
+            
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data_fit</span><span class="o">.</span><span class="n">_model</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_fit</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;r&#39;</span><span class="p">],</span> <span class="o">*</span><span class="n">theta</span><span class="p">)</span>
+            
+        <span class="bp">self</span><span class="o">.</span><span class="n">data_fit</span><span class="o">.</span><span class="n">_chisq</span><span class="p">()</span>
+        <span class="k">return</span> <span class="o">-</span><span class="mf">0.5</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_fit</span><span class="o">.</span><span class="n">chisq</span>
+    
+    <span class="k">def</span> <span class="nf">__log_acceptance</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calcule la probabilité d&#39;acceptation des nouveaux paramètres proposés dans l&#39;échantillonnage.</span>
+<span class="sd">        </span>
+<span class="sd">        Description</span>
+<span class="sd">        -----------</span>
+<span class="sd">        Cette méthode calcule la différence de log-vraisemblance entre les propositions actuelles et nouvelles de </span>
+<span class="sd">        paramètres. La probabilité d&#39;acceptation est ensuite calculée en fonction de cette différence.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">            None</span>
+<span class="sd">            Cette méthode ne prend pas de paramètre.</span>
+<span class="sd">        </span>
+<span class="sd">        Return</span>
+<span class="sd">        ------</span>
+<span class="sd">        float</span>
+<span class="sd">            La log-probabilité d&#39;acceptation des nouveaux paramètres.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">log_prior_current</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__log_prior</span><span class="p">()</span>
+        <span class="n">log_likelihood_current</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__log_likelihood</span><span class="p">()</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">__update_theta</span><span class="p">()</span>
+        <span class="n">log_prior_new</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__log_prior</span><span class="p">()</span>
+            
+        <span class="k">if</span> <span class="n">log_prior_new</span> <span class="o">==</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">:</span>
+            <span class="k">return</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span>
+
+        <span class="n">log_likelihood_new</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__log_likelihood</span><span class="p">()</span>        
+        <span class="k">return</span> <span class="n">log_prior_new</span> <span class="o">+</span> <span class="n">log_likelihood_new</span> <span class="o">-</span> <span class="n">log_prior_current</span> <span class="o">-</span> <span class="n">log_likelihood_current</span>
+    
+    <span class="k">def</span> <span class="nf">__accept_or_reject</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">log_alpha</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Accepte ou rejette les nouveaux paramètres selon la probabilité d&#39;acceptation.</span>
+<span class="sd">        </span>
+<span class="sd">        Description</span>
+<span class="sd">        -----------</span>
+<span class="sd">        Cette méthode accepte les nouveaux paramètres avec une probabilité égale à `exp(log_alpha)`. Sinon, les </span>
+<span class="sd">        paramètres actuels sont restaurés.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        log_alpha : float</span>
+<span class="sd">            La log-probabilité d&#39;acceptation des nouveaux paramètres.</span>
+<span class="sd">        </span>
+<span class="sd">        Return</span>
+<span class="sd">        ------</span>
+<span class="sd">        numpy.ndarray</span>
+<span class="sd">            Les paramètres soit acceptés soit restaurés.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">()</span> <span class="o">&lt;</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">log_alpha</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">theta_new</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">__backup_theta</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">theta_current</span>
+    
+    <span class="k">def</span> <span class="nf">__metropolis_hastings</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">N</span><span class="o">=</span><span class="mi">10000</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Effectue un échantillonnage MCMC en utilisant l&#39;algorithme de Metropolis-Hastings.</span>
+<span class="sd">         </span>
+<span class="sd">        Description</span>
+<span class="sd">        -----------</span>
+<span class="sd">        Cette méthode exécute l&#39;algorithme de Metropolis-Hastings pour échantillonner les paramètres du modèle. </span>
+<span class="sd">        Elle génère une chaîne d&#39;échantillons des paramètres.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        N : int, optional</span>
+<span class="sd">            Le nombre d&#39;itérations de l&#39;échantillonnage MCMC. Par défaut, N=10000.</span>
+<span class="sd">       </span>
+<span class="sd">        Return</span>
+<span class="sd">        ------</span>
+<span class="sd">        None</span>
+<span class="sd">            Cette méthode ne retourne rien.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">samples</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+        
+        <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">):</span>
+            <span class="n">_time</span> <span class="o">=</span> <span class="mi">10</span><span class="o">*</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">start_time</span><span class="p">)</span>
+            <span class="n">minutes</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">_time</span> <span class="o">//</span> <span class="mi">60</span><span class="p">)</span>
+            <span class="n">seconds</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">_time</span> <span class="o">%</span> <span class="mi">60</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\r</span><span class="s2">Progression : </span><span class="si">{</span><span class="nb">int</span><span class="p">((</span><span class="n">n</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="n">N</span><span class="o">*</span><span class="mi">100</span><span class="p">)</span><span class="si">}</span><span class="s2">% [</span><span class="si">{</span><span class="n">minutes</span><span class="si">:</span><span class="s2">02d</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">seconds</span><span class="si">:</span><span class="s2">02d</span><span class="si">}</span><span class="s2">]&quot;</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">flush</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">log_alpha</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__log_acceptance</span><span class="p">()</span>
+            <span class="n">theta_current</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__accept_or_reject</span><span class="p">(</span><span class="n">log_alpha</span><span class="p">)</span>
+            <span class="n">samples</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">theta_current</span><span class="p">)</span>
+            
+        <span class="bp">self</span><span class="o">.</span><span class="n">sampler_theta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">samples</span><span class="p">)</span>
+    
+    <span class="k">def</span> <span class="nf">__multi_metropolis_hastings</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">M</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">N</span><span class="o">=</span><span class="mi">10000</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Effectue un échantillonnage MCMC sur plusieurs chaînes en utilisant l&#39;algorithme de Metropolis-Hastings.</span>
+<span class="sd">        </span>
+<span class="sd">        Description</span>
+<span class="sd">        -----------</span>
+<span class="sd">        Cette méthode exécute l&#39;algorithme de Metropolis-Hastings pour échantillonner les paramètres d&#39;un modèle </span>
+<span class="sd">        sur plusieurs chaînes indépendantes. Chaque itération propose une nouvelle valeur des paramètres selon </span>
+<span class="sd">        une distribution de proposition et accepte ou rejette cette valeur en fonction de la probabilité d&#39;acceptation </span>
+<span class="sd">        calculée. Les chaînes sont stockées dans un tableau multidimensionnel de taille (M, N, ndim), où `ndim` est </span>
+<span class="sd">        le nombre de dimensions du paramètre.</span>
+<span class="sd">    </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        M : int, optional</span>
+<span class="sd">            Le nombre de chaînes indépendantes à générer. Par défaut, M=10.</span>
+<span class="sd">        N : int, optional</span>
+<span class="sd">            Le nombre d&#39;échantillons à générer par chaîne. Par défaut, N=10000.</span>
+<span class="sd">                </span>
+<span class="sd">        Return</span>
+<span class="sd">        ------</span>
+<span class="sd">        None</span>
+<span class="sd">            Cette méthode ne retourne rien. Les chaînes générées sont enregistrées dans l&#39;attribut `self.sampler_theta` sous forme d&#39;un tableau NumPy.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">chains</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+        
+        <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">M</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">theta_current</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">theta_new</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">theta_new</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">psigma</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ndim</span><span class="p">)</span>
+            <span class="n">samples</span> <span class="o">=</span> <span class="p">[]</span>
+    
+            <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">):</span>
+                <span class="n">_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">start_time</span>
+                <span class="n">minutes</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">_time</span> <span class="o">//</span> <span class="mi">60</span><span class="p">)</span>
+                <span class="n">seconds</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">_time</span> <span class="o">%</span> <span class="mi">60</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\r</span><span class="s2">Progression : </span><span class="si">{</span><span class="nb">int</span><span class="p">((</span><span class="n">m</span><span class="o">*</span><span class="n">N</span><span class="o">+</span><span class="n">n</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">M</span><span class="o">*</span><span class="n">N</span><span class="p">)</span><span class="o">*</span><span class="mi">100</span><span class="p">)</span><span class="si">}</span><span class="s2">% [</span><span class="si">{</span><span class="n">minutes</span><span class="si">:</span><span class="s2">02d</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">seconds</span><span class="si">:</span><span class="s2">02d</span><span class="si">}</span><span class="s2">]&quot;</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">flush</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="n">log_alpha</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__log_acceptance</span><span class="p">()</span>
+                <span class="n">theta_current</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__accept_or_reject</span><span class="p">(</span><span class="n">log_alpha</span><span class="p">)</span>
+                <span class="n">samples</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">theta_current</span><span class="p">)</span>
+                
+            <span class="n">chains</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">samples</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sampler_theta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">chains</span><span class="p">)</span>
+
+<div class="viewcode-block" id="MCMC.PlotMCMC">
+<a class="viewcode-back" href="../../tp2_pkg.html#tp2_pkg.mcmc.MCMC.PlotMCMC">[docs]</a>
+    <span class="k">def</span> <span class="nf">PlotMCMC</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Affiche les évolutions des paramètres du modèle durant l&#39;échantillonnage MCMC.</span>
+<span class="sd">        </span>
+<span class="sd">        Description</span>
+<span class="sd">        -----------</span>
+<span class="sd">        Cette méthode génère deux graphiques montrant l&#39;évolution des paramètres `rho0` et `rp` au cours des </span>
+<span class="sd">        itérations de l&#39;échantillonnage MCMC.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">            None</span>
+<span class="sd">            Cette méthode ne prend pas de paramètre.</span>
+<span class="sd">        </span>
+<span class="sd">        Return</span>
+<span class="sd">        ------</span>
+<span class="sd">        None</span>
+<span class="sd">            Cette méthode ne retourne rien.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">multi_chain</span><span class="p">:</span>
+            <span class="n">nchains</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sampler_theta</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            
+            <span class="k">for</span> <span class="n">chain</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nchains</span><span class="p">):</span>
+                <span class="n">rho0_samples</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sampler_theta</span><span class="p">[</span><span class="n">chain</span><span class="p">,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">]</span>
+                <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">rho0_samples</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Walker </span><span class="si">{</span><span class="n">chain</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;Pas du MCMC&#39;</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;$</span><span class="se">\\</span><span class="s1">rho_0$&#39;</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;Évolution de $</span><span class="se">\\</span><span class="s1">rho_0$&#39;</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+    
+            <span class="k">for</span> <span class="n">chain</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nchains</span><span class="p">):</span>
+                <span class="n">rp_samples</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sampler_theta</span><span class="p">[</span><span class="n">chain</span><span class="p">,</span> <span class="p">:,</span> <span class="mi">1</span><span class="p">]</span>
+                <span class="n">rho0_samples</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sampler_theta</span><span class="p">[</span><span class="n">chain</span><span class="p">,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">]</span>
+                <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">rp_samples</span><span class="p">,</span> <span class="n">rho0_samples</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Walker </span><span class="si">{</span><span class="n">chain</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;$r_p$&#39;</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;$</span><span class="se">\\</span><span class="s1">rho_0$&#39;</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;Évolution de $</span><span class="se">\\</span><span class="s1">rho_0$ en fonction de $r_p$&#39;</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+            
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">rho0_samples</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sampler_theta</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">rho0_samples</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;Pas du MCMC&#39;</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;$</span><span class="se">\\</span><span class="s1">rho_0$&#39;</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;Évolution de $</span><span class="se">\\</span><span class="s1">rho_0$&#39;</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+    
+            <span class="n">rp_samples</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sampler_theta</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">rp_samples</span><span class="p">,</span> <span class="n">rho0_samples</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;$r_p$&#39;</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;$</span><span class="se">\\</span><span class="s1">rho_0$&#39;</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;Évolution de $</span><span class="se">\\</span><span class="s1">rho_0$ en fonction de $r_p$&#39;</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span></div>
+
+    
+    <span class="k">def</span> <span class="nf">__log_probability</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">theta</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calcule la probabilité totale du modèle, combinant a priori et vraisemblance.</span>
+<span class="sd">        </span>
+<span class="sd">        Description</span>
+<span class="sd">        -----------</span>
+<span class="sd">        Cette méthode calcule la probabilité totale en combinant la log-probabilité a priori et la log-vraisemblance </span>
+<span class="sd">        du modèle.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        theta : numpy.ndarray, optional</span>
+<span class="sd">            Les paramètres pour lesquels calculer la probabilité totale. Si `None`, utilise `theta_new`.        </span>
+<span class="sd">        </span>
+<span class="sd">        Return</span>
+<span class="sd">        ------</span>
+<span class="sd">        float</span>
+<span class="sd">            La probabilité totale du modèle pour les paramètres `theta`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">lp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__log_prior</span><span class="p">(</span><span class="n">theta</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">lp</span><span class="p">):</span>
+            <span class="k">return</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span>
+        
+        <span class="n">ll</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__log_likelihood</span><span class="p">(</span><span class="n">theta</span><span class="p">)</span>
+        <span class="n">le</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">ll</span><span class="p">)</span><span class="o">+</span><span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">lp</span><span class="p">)))</span>
+        <span class="k">return</span> <span class="n">ll</span> <span class="o">+</span> <span class="n">lp</span> <span class="o">-</span> <span class="n">le</span>
+    
+    <span class="k">def</span> <span class="nf">__mcmc_emcee</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Effectue un échantillonnage MCMC en utilisant l&#39;échantillonneur emcee.</span>
+<span class="sd">        </span>
+<span class="sd">        Description</span>
+<span class="sd">        -----------</span>
+<span class="sd">        Cette méthode utilise l&#39;échantillonneur `EnsembleSampler` de la bibliothèque `emcee` pour effectuer l&#39;échantillonnage </span>
+<span class="sd">        MCMC. Elle initialise les positions des &quot;walkers&quot; et lance l&#39;échantillonnage.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">            None</span>
+<span class="sd">            Cette méthode ne prend pas de paramètre.</span>
+<span class="sd">        </span>
+<span class="sd">        Return</span>
+<span class="sd">        ------</span>
+<span class="sd">        None</span>
+<span class="sd">            Cette méthode ne retourne rien.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ndim</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">theta_new</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nwalkers</span> <span class="o">=</span> <span class="mi">10</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nech</span> <span class="o">=</span> <span class="mi">10000</span>
+        <span class="n">init_pos</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">theta_new</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">psigma</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nwalkers</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ndim</span><span class="p">)</span>
+        <span class="n">sampler</span> <span class="o">=</span> <span class="n">emc</span><span class="o">.</span><span class="n">EnsembleSampler</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nwalkers</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ndim</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">__log_probability</span><span class="p">)</span>
+        <span class="n">sampler</span><span class="o">.</span><span class="n">run_mcmc</span><span class="p">(</span><span class="n">init_pos</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nech</span><span class="p">,</span> <span class="n">progress</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sampler</span> <span class="o">=</span> <span class="n">sampler</span>
+        
+        <span class="c1">#plt.plot(self.sampler_chain[:,0,0])</span>
+        <span class="c1">#plt.xlabel(&#39;Pas du MCMC&#39;)</span>
+        <span class="c1">#plt.ylabel(&#39;$\\rho_0$&#39;)</span>
+        <span class="c1">#plt.title(&#39;Évolution de $\\rho_0$&#39;)</span>
+        <span class="c1">#plt.show()</span>
+        
+    <span class="k">def</span> <span class="nf">__autocorr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calcule la fonction d&#39;autocorrélation pour chaque &quot;walker&quot; et chaque paramètre.</span>
+<span class="sd">        </span>
+<span class="sd">        Description</span>
+<span class="sd">        -----------</span>
+<span class="sd">        Cette méthode calcule la fonction d&#39;autocorrélation pour chaque &quot;walker&quot; dans la chaîne MCMC et pour chaque paramètre.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">            None</span>
+<span class="sd">        </span>
+<span class="sd">        Return</span>
+<span class="sd">        ------</span>
+<span class="sd">        None</span>
+<span class="sd">            Cette méthode ne retourne rien.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">autocorr_func</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">nwalkers</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ndim</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nech</span><span class="p">))</span>
+        <span class="n">test_autocorr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sampler</span><span class="o">.</span><span class="n">get_chain</span><span class="p">()</span>
+
+        <span class="k">for</span> <span class="n">walker</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nwalkers</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ndim</span><span class="p">):</span>
+                <span class="n">x</span> <span class="o">=</span> <span class="n">test_autocorr</span><span class="p">[:,</span> <span class="n">walker</span><span class="p">,</span> <span class="n">param</span><span class="p">]</span>
+                <span class="n">autocorr</span> <span class="o">=</span> <span class="n">emc</span><span class="o">.</span><span class="n">autocorr</span><span class="o">.</span><span class="n">function_1d</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">autocorr_func</span><span class="p">[</span><span class="n">walker</span><span class="p">,</span> <span class="n">param</span><span class="p">,</span> <span class="p">:</span><span class="nb">len</span><span class="p">(</span><span class="n">autocorr</span><span class="p">)]</span> <span class="o">=</span> <span class="n">autocorr</span>
+    
+<div class="viewcode-block" id="MCMC.PlotAutoCorr">
+<a class="viewcode-back" href="../../tp2_pkg.html#tp2_pkg.mcmc.MCMC.PlotAutoCorr">[docs]</a>
+    <span class="k">def</span> <span class="nf">PlotAutoCorr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Affiche les fonctions d&#39;autocorrélation pour chaque paramètre en fonction du nombre de pas.</span>
+<span class="sd">        </span>
+<span class="sd">        Description</span>
+<span class="sd">        -----------</span>
+<span class="sd">        Cette méthode génère un graphique pour chaque paramètre montrant l&#39;autocorrélation en fonction des pas d&#39;échantillonnage.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">            None</span>
+<span class="sd">        </span>
+<span class="sd">        Return</span>
+<span class="sd">        ------</span>
+<span class="sd">        None</span>
+<span class="sd">            Cette méthode ne retourne rien.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">pas</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nech</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pas_inde</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">nwalkers</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ndim</span><span class="p">))</span>
+        <span class="n">seuil</span> <span class="o">=</span> <span class="mf">0.1</span>
+
+        <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ndim</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">walker</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nwalkers</span><span class="p">):</span>
+                <span class="n">autocorr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">autocorr_func</span><span class="p">[</span><span class="n">walker</span><span class="p">,</span> <span class="n">param</span><span class="p">,</span> <span class="p">:]</span>
+                <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">pas</span><span class="p">,</span> <span class="n">autocorr</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Walker </span><span class="si">{</span><span class="n">walker</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">pas_inde</span><span class="p">[</span><span class="n">walker</span><span class="p">,</span> <span class="n">param</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">autocorr</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">seuil</span><span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+            
+            <span class="n">plt</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span><span class="n">seuil</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;red&#39;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;--&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Seuil d&#39;independance&quot;</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Paramètre </span><span class="si">{</span><span class="n">param</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Pas&quot;</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;Autocorrélation&quot;</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">xscale</span><span class="p">(</span><span class="s1">&#39;log&#39;</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span></div>
+
+        
+    <span class="k">def</span> <span class="nf">__convergence</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calcule et affiche la convergence de chaque paramètre dans les chaînes MCMC.</span>
+<span class="sd">        </span>
+<span class="sd">        Description</span>
+<span class="sd">        -----------</span>
+<span class="sd">        Cette méthode évalue la convergence des chaînes MCMC en calculant le critère de Gelman-Rubin pour chaque paramètre.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">            None</span>
+<span class="sd">        </span>
+<span class="sd">        Return</span>
+<span class="sd">        ------</span>
+<span class="sd">        None</span>
+<span class="sd">            Cette méthode ne retourne rien.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">test_conv</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sampler</span><span class="o">.</span><span class="n">get_chain</span><span class="p">()</span>
+        <span class="n">N</span> <span class="o">=</span> <span class="n">test_conv</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">M</span> <span class="o">=</span> <span class="n">test_conv</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">mean_chain</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">test_conv</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">mean_all</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">mean_chain</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">B</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="n">M</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="n">mean_chain</span><span class="o">-</span><span class="n">mean_all</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">W_</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="n">N</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="n">test_conv</span><span class="o">-</span><span class="n">mean_chain</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">W</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">M</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">W_</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">R1</span> <span class="o">=</span> <span class="p">(</span><span class="n">N</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="n">N</span> <span class="o">*</span> <span class="n">W</span>
+        <span class="n">R2</span> <span class="o">=</span> <span class="p">(</span><span class="n">M</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="n">M</span> <span class="o">*</span> <span class="n">B</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">conv</span> <span class="o">=</span> <span class="p">(</span><span class="n">R1</span> <span class="o">+</span> <span class="n">R2</span><span class="p">)</span><span class="o">/</span><span class="n">W</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Convergence sur les prametres :&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;     p0 : </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">conv</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;     rp : </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">conv</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;      A : </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">conv</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;     mu : </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">conv</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  sigma : </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">conv</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">conv</span> <span class="o">&lt;</span> <span class="mf">1.03</span><span class="p">):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Tout les parametres ont converges.&quot;</span><span class="p">)</span>
+            
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Un ou plusieurs parametres n&#39;ont pas converges.&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__selection</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Effectue un sous-échantillonnage des chaînes MCMC en fonction de la période de &quot;burn-in&quot; et de l&#39;indépendance.</span>
+<span class="sd">        </span>
+<span class="sd">        Description</span>
+<span class="sd">        -----------</span>
+<span class="sd">        Cette méthode supprime les premiers échantillons (période de burn-in) et applique un sous-échantillonnage </span>
+<span class="sd">        pour obtenir des échantillons indépendants.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">            None</span>
+<span class="sd">        </span>
+<span class="sd">        Return</span>
+<span class="sd">        ------</span>
+<span class="sd">        None</span>
+<span class="sd">            Cette méthode ne retourne rien.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">burn_in</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nech</span> <span class="o">//</span> <span class="mi">10</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sampler_chain</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sampler</span><span class="o">.</span><span class="n">get_chain</span><span class="p">(</span><span class="n">discard</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">burn_in</span><span class="p">,</span> <span class="n">thin</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pas_inde</span><span class="p">)),</span> <span class="n">flat</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<div class="viewcode-block" id="MCMC.GetDist">
+<a class="viewcode-back" href="../../tp2_pkg.html#tp2_pkg.mcmc.MCMC.GetDist">[docs]</a>
+    <span class="k">def</span> <span class="nf">GetDist</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Affiche un graphique des distributions des paramètres à partir des échantillons MCMC.</span>
+<span class="sd">        </span>
+<span class="sd">        Description</span>
+<span class="sd">        -----------</span>
+<span class="sd">        Cette méthode utilise la bibliothèque `getdist` pour générer un graphique des distributions des paramètres </span>
+<span class="sd">        obtenus après le sous-échantillonnage de la chaîne MCMC.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">            None</span>
+<span class="sd">        </span>
+<span class="sd">        Return</span>
+<span class="sd">        ------</span>
+<span class="sd">        None</span>
+<span class="sd">            Cette méthode ne retourne rien.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="s1">&#39;all&#39;</span><span class="p">)</span> <span class="c1"># Probleme de gestion entre matplotlib et getdist</span>
+        <span class="n">names</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;rho_0&#39;</span><span class="p">,</span> <span class="s1">&#39;rp&#39;</span><span class="p">,</span> <span class="s1">&#39;A&#39;</span><span class="p">,</span> <span class="s1">&#39;mu&#39;</span><span class="p">,</span> <span class="s1">&#39;sigma&#39;</span><span class="p">]</span>
+        <span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;</span><span class="se">\\</span><span class="s1">rho_0&#39;</span><span class="p">,</span> <span class="s1">&#39;r_p&#39;</span><span class="p">,</span> <span class="s1">&#39;A&#39;</span><span class="p">,</span> <span class="s1">&#39;</span><span class="se">\\</span><span class="s1">mu&#39;</span><span class="p">,</span> <span class="s1">&#39;</span><span class="se">\\</span><span class="s1">sigma&#39;</span><span class="p">]</span>
+        <span class="n">mcsamples</span> <span class="o">=</span> <span class="n">MCSamples</span><span class="p">(</span><span class="n">samples</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sampler_chain</span><span class="p">,</span> <span class="n">names</span><span class="o">=</span><span class="n">names</span><span class="p">,</span> <span class="n">labels</span><span class="o">=</span><span class="n">labels</span><span class="p">)</span>
+        <span class="n">g</span> <span class="o">=</span> <span class="n">plots</span><span class="o">.</span><span class="n">get_subplot_plotter</span><span class="p">()</span>
+        <span class="n">g</span><span class="o">.</span><span class="n">triangle_plot</span><span class="p">(</span><span class="n">mcsamples</span><span class="p">,</span> <span class="n">filled</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">legend_labels</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;MCMC (emcee)&#39;</span><span class="p">])</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span></div>
+
+        
+<div class="viewcode-block" id="MCMC.SuperposeDist">
+<a class="viewcode-back" href="../../tp2_pkg.html#tp2_pkg.mcmc.MCMC.SuperposeDist">[docs]</a>
+    <span class="k">def</span> <span class="nf">SuperposeDist</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Superpose les distributions des paramètres obtenues par MCMC et par minimisation du $\chi^2$.</span>
+<span class="sd">        </span>
+<span class="sd">        Description</span>
+<span class="sd">        -----------</span>
+<span class="sd">        Cette méthode utilise la bibliothèque `getdist` pour tracer un diagramme en triangle </span>
+<span class="sd">        des distributions marginales des paramètres. Les distributions obtenues par l&#39;échantillonnage </span>
+<span class="sd">        MCMC (via `self.sampler_chain`) sont comparées à celles obtenues par un tirage simulé autour </span>
+<span class="sd">        des valeurs minimisant le $\chi^2$ (via `self.data_fit._tirage()`). Les deux distributions </span>
+<span class="sd">        sont superposées et affichées sur le même graphique avec des légendes explicites.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">            None</span>
+<span class="sd">        </span>
+<span class="sd">        Return</span>
+<span class="sd">        ------</span>
+<span class="sd">        None</span>
+<span class="sd">            Cette méthode ne retourne rien. Le graphique est affiché à l&#39;écran.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="s1">&#39;all&#39;</span><span class="p">)</span> <span class="c1"># Probleme de gestion entre matplotlib et getdist</span>
+        <span class="n">tirage</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_fit</span><span class="o">.</span><span class="n">_tirage</span><span class="p">()</span>
+        <span class="n">names</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;rho_0&#39;</span><span class="p">,</span> <span class="s1">&#39;rp&#39;</span><span class="p">,</span> <span class="s1">&#39;A&#39;</span><span class="p">,</span> <span class="s1">&#39;mu&#39;</span><span class="p">,</span> <span class="s1">&#39;sigma&#39;</span><span class="p">]</span>
+        <span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;</span><span class="se">\\</span><span class="s1">rho_0&#39;</span><span class="p">,</span> <span class="s1">&#39;r_p&#39;</span><span class="p">,</span> <span class="s1">&#39;A&#39;</span><span class="p">,</span> <span class="s1">&#39;</span><span class="se">\\</span><span class="s1">mu&#39;</span><span class="p">,</span> <span class="s1">&#39;</span><span class="se">\\</span><span class="s1">sigma&#39;</span><span class="p">]</span>
+        <span class="n">sample_mcmc</span> <span class="o">=</span> <span class="n">MCSamples</span><span class="p">(</span><span class="n">samples</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sampler_chain</span><span class="p">,</span> <span class="n">names</span><span class="o">=</span><span class="n">names</span><span class="p">,</span> <span class="n">labels</span><span class="o">=</span><span class="n">labels</span><span class="p">)</span>
+        <span class="n">sample_chisq</span> <span class="o">=</span> <span class="n">MCSamples</span><span class="p">(</span><span class="n">samples</span><span class="o">=</span><span class="n">tirage</span><span class="p">,</span> <span class="n">names</span><span class="o">=</span><span class="n">names</span><span class="p">,</span> <span class="n">labels</span><span class="o">=</span><span class="n">labels</span><span class="p">)</span>
+        <span class="n">g</span> <span class="o">=</span> <span class="n">plots</span><span class="o">.</span><span class="n">get_subplot_plotter</span><span class="p">()</span>
+        <span class="n">g</span><span class="o">.</span><span class="n">triangle_plot</span><span class="p">([</span><span class="n">sample_mcmc</span><span class="p">,</span> <span class="n">sample_chisq</span><span class="p">],</span> <span class="n">filled</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">legend_labels</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;MCMC (emcee)&#39;</span><span class="p">,</span> <span class="sa">r</span><span class="s1">&#39;Minimisation du $\chi^2$&#39;</span><span class="p">])</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Droits d'auteur 2024, MT &amp; DB.</p>
+  </div>
+
+  Compilé avec <a href="https://www.sphinx-doc.org/">Sphinx</a> en utilisant un
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">thème</a>
+    fourni par <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

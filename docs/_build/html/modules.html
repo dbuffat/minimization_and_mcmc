@@ -1,0 +1,235 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="fr" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tp2_pkg &mdash; Documentation TP2 - Inférences et MCMC fr</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="_static/custom.css" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=de646d1a"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="_static/translations.js?v=e6b791cb"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Recherche" href="search.html" />
+    <link rel="next" title="Réponse aux Questions" href="rep.html" />
+    <link rel="prev" title="tp2_pkg package" href="tp2_pkg.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            TP2 - Inférences et MCMC
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Rechercher docs" aria-label="Rechercher docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="tp2_pkg.html">tp2_pkg package</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">tp2_pkg</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="tp2_pkg.html">tp2_pkg package</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="rep.html">Réponse aux Questions</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">TP2 - Inférences et MCMC</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">tp2_pkg</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/modules.rst.txt" rel="nofollow"> Afficher la source de la page</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="tp2-pkg">
+<h1>tp2_pkg<a class="headerlink" href="#tp2-pkg" title="Lien vers cette rubrique"></a></h1>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="tp2_pkg.html">tp2_pkg package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="tp2_pkg.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tp2_pkg.html#module-tp2_pkg.mcmc">tp2_pkg.mcmc module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="tp2_pkg.html#tp2_pkg.mcmc.MCMC"><code class="docutils literal notranslate"><span class="pre">MCMC</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="tp2_pkg.html#tp2_pkg.mcmc.MCMC.data_fit"><code class="docutils literal notranslate"><span class="pre">MCMC.data_fit</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tp2_pkg.html#tp2_pkg.mcmc.MCMC.psigma"><code class="docutils literal notranslate"><span class="pre">MCMC.psigma</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tp2_pkg.html#tp2_pkg.mcmc.MCMC.theta_current"><code class="docutils literal notranslate"><span class="pre">MCMC.theta_current</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tp2_pkg.html#tp2_pkg.mcmc.MCMC.theta_new"><code class="docutils literal notranslate"><span class="pre">MCMC.theta_new</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tp2_pkg.html#tp2_pkg.mcmc.MCMC.sampler_theta"><code class="docutils literal notranslate"><span class="pre">MCMC.sampler_theta</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tp2_pkg.html#tp2_pkg.mcmc.MCMC.sampler"><code class="docutils literal notranslate"><span class="pre">MCMC.sampler</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tp2_pkg.html#tp2_pkg.mcmc.MCMC.sampler_chain"><code class="docutils literal notranslate"><span class="pre">MCMC.sampler_chain</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tp2_pkg.html#tp2_pkg.mcmc.MCMC.autocorr_func"><code class="docutils literal notranslate"><span class="pre">MCMC.autocorr_func</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tp2_pkg.html#tp2_pkg.mcmc.MCMC.conv"><code class="docutils literal notranslate"><span class="pre">MCMC.conv</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tp2_pkg.html#tp2_pkg.mcmc.MCMC.ndim"><code class="docutils literal notranslate"><span class="pre">MCMC.ndim</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tp2_pkg.html#tp2_pkg.mcmc.MCMC.nwalkers"><code class="docutils literal notranslate"><span class="pre">MCMC.nwalkers</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tp2_pkg.html#tp2_pkg.mcmc.MCMC.nech"><code class="docutils literal notranslate"><span class="pre">MCMC.nech</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tp2_pkg.html#tp2_pkg.mcmc.MCMC.burn_in"><code class="docutils literal notranslate"><span class="pre">MCMC.burn_in</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tp2_pkg.html#tp2_pkg.mcmc.MCMC.pas_inde"><code class="docutils literal notranslate"><span class="pre">MCMC.pas_inde</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tp2_pkg.html#tp2_pkg.mcmc.MCMC.__init__"><code class="docutils literal notranslate"><span class="pre">MCMC.__init__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tp2_pkg.html#tp2_pkg.mcmc.MCMC.__compile_data"><code class="docutils literal notranslate"><span class="pre">MCMC.__compile_data()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tp2_pkg.html#tp2_pkg.mcmc.MCMC.Main_mcmc"><code class="docutils literal notranslate"><span class="pre">MCMC.Main_mcmc()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tp2_pkg.html#tp2_pkg.mcmc.MCMC.Main_emcee"><code class="docutils literal notranslate"><span class="pre">MCMC.Main_emcee()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tp2_pkg.html#tp2_pkg.mcmc.MCMC.__function_proposal"><code class="docutils literal notranslate"><span class="pre">MCMC.__function_proposal()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tp2_pkg.html#tp2_pkg.mcmc.MCMC.__update_theta"><code class="docutils literal notranslate"><span class="pre">MCMC.__update_theta()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tp2_pkg.html#tp2_pkg.mcmc.MCMC.__backup_theta"><code class="docutils literal notranslate"><span class="pre">MCMC.__backup_theta()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tp2_pkg.html#tp2_pkg.mcmc.MCMC.__log_prior"><code class="docutils literal notranslate"><span class="pre">MCMC.__log_prior()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tp2_pkg.html#tp2_pkg.mcmc.MCMC.__log_likelihood"><code class="docutils literal notranslate"><span class="pre">MCMC.__log_likelihood()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tp2_pkg.html#tp2_pkg.mcmc.MCMC.__log_acceptance"><code class="docutils literal notranslate"><span class="pre">MCMC.__log_acceptance()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tp2_pkg.html#tp2_pkg.mcmc.MCMC.__accept_or_reject"><code class="docutils literal notranslate"><span class="pre">MCMC.__accept_or_reject()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tp2_pkg.html#tp2_pkg.mcmc.MCMC.__metropolis_hastings"><code class="docutils literal notranslate"><span class="pre">MCMC.__metropolis_hastings()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tp2_pkg.html#tp2_pkg.mcmc.MCMC.__multi_metropolis_hastings"><code class="docutils literal notranslate"><span class="pre">MCMC.__multi_metropolis_hastings()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tp2_pkg.html#tp2_pkg.mcmc.MCMC.PlotMCMC"><code class="docutils literal notranslate"><span class="pre">MCMC.PlotMCMC()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tp2_pkg.html#tp2_pkg.mcmc.MCMC.__log_probability"><code class="docutils literal notranslate"><span class="pre">MCMC.__log_probability()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tp2_pkg.html#tp2_pkg.mcmc.MCMC.__mcmc_emcee"><code class="docutils literal notranslate"><span class="pre">MCMC.__mcmc_emcee()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tp2_pkg.html#tp2_pkg.mcmc.MCMC.__autocorr"><code class="docutils literal notranslate"><span class="pre">MCMC.__autocorr()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tp2_pkg.html#tp2_pkg.mcmc.MCMC.PlotAutoCorr"><code class="docutils literal notranslate"><span class="pre">MCMC.PlotAutoCorr()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tp2_pkg.html#tp2_pkg.mcmc.MCMC.__convergence"><code class="docutils literal notranslate"><span class="pre">MCMC.__convergence()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tp2_pkg.html#tp2_pkg.mcmc.MCMC.__selection"><code class="docutils literal notranslate"><span class="pre">MCMC.__selection()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tp2_pkg.html#tp2_pkg.mcmc.MCMC.GetDist"><code class="docutils literal notranslate"><span class="pre">MCMC.GetDist()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tp2_pkg.html#tp2_pkg.mcmc.MCMC.SuperposeDist"><code class="docutils literal notranslate"><span class="pre">MCMC.SuperposeDist()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tp2_pkg.html#tp2_pkg.mcmc.MCMC.__dict__"><code class="docutils literal notranslate"><span class="pre">MCMC.__dict__</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tp2_pkg.html#tp2_pkg.mcmc.MCMC.__module__"><code class="docutils literal notranslate"><span class="pre">MCMC.__module__</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tp2_pkg.html#tp2_pkg.mcmc.MCMC.__weakref__"><code class="docutils literal notranslate"><span class="pre">MCMC.__weakref__</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="tp2_pkg.html#module-tp2_pkg.minimisation">tp2_pkg.minimisation module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="tp2_pkg.html#tp2_pkg.minimisation.Minimisation"><code class="docutils literal notranslate"><span class="pre">Minimisation</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="tp2_pkg.html#tp2_pkg.minimisation.Minimisation.__init__"><code class="docutils literal notranslate"><span class="pre">Minimisation.__init__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tp2_pkg.html#tp2_pkg.minimisation.Minimisation.__compile_data"><code class="docutils literal notranslate"><span class="pre">Minimisation.__compile_data()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tp2_pkg.html#tp2_pkg.minimisation.Minimisation.Main"><code class="docutils literal notranslate"><span class="pre">Minimisation.Main()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tp2_pkg.html#tp2_pkg.minimisation.Minimisation.__load_data"><code class="docutils literal notranslate"><span class="pre">Minimisation.__load_data()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tp2_pkg.html#tp2_pkg.minimisation.Minimisation.PrintData"><code class="docutils literal notranslate"><span class="pre">Minimisation.PrintData()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tp2_pkg.html#tp2_pkg.minimisation.Minimisation.__bruit_blanc"><code class="docutils literal notranslate"><span class="pre">Minimisation.__bruit_blanc()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tp2_pkg.html#tp2_pkg.minimisation.Minimisation.__bruit_colore"><code class="docutils literal notranslate"><span class="pre">Minimisation.__bruit_colore()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tp2_pkg.html#tp2_pkg.minimisation.Minimisation.__covariance"><code class="docutils literal notranslate"><span class="pre">Minimisation.__covariance()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tp2_pkg.html#tp2_pkg.minimisation.Minimisation.__inv_covariance"><code class="docutils literal notranslate"><span class="pre">Minimisation.__inv_covariance()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tp2_pkg.html#tp2_pkg.minimisation.Minimisation._model"><code class="docutils literal notranslate"><span class="pre">Minimisation._model()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tp2_pkg.html#tp2_pkg.minimisation.Minimisation.__fit"><code class="docutils literal notranslate"><span class="pre">Minimisation.__fit()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tp2_pkg.html#tp2_pkg.minimisation.Minimisation.PrintFit"><code class="docutils literal notranslate"><span class="pre">Minimisation.PrintFit()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tp2_pkg.html#tp2_pkg.minimisation.Minimisation._chisq"><code class="docutils literal notranslate"><span class="pre">Minimisation._chisq()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tp2_pkg.html#tp2_pkg.minimisation.Minimisation._chisq_red"><code class="docutils literal notranslate"><span class="pre">Minimisation._chisq_red()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tp2_pkg.html#tp2_pkg.minimisation.Minimisation.PrintChisq"><code class="docutils literal notranslate"><span class="pre">Minimisation.PrintChisq()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tp2_pkg.html#tp2_pkg.minimisation.Minimisation._tirage"><code class="docutils literal notranslate"><span class="pre">Minimisation._tirage()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tp2_pkg.html#tp2_pkg.minimisation.Minimisation.GetDist"><code class="docutils literal notranslate"><span class="pre">Minimisation.GetDist()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tp2_pkg.html#tp2_pkg.minimisation.Minimisation.__dict__"><code class="docutils literal notranslate"><span class="pre">Minimisation.__dict__</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tp2_pkg.html#tp2_pkg.minimisation.Minimisation.__module__"><code class="docutils literal notranslate"><span class="pre">Minimisation.__module__</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tp2_pkg.html#tp2_pkg.minimisation.Minimisation.__weakref__"><code class="docutils literal notranslate"><span class="pre">Minimisation.__weakref__</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="tp2_pkg.html#module-tp2_pkg.spectro">tp2_pkg.spectro module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="tp2_pkg.html#tp2_pkg.spectro.SpectroAnalysis"><code class="docutils literal notranslate"><span class="pre">SpectroAnalysis</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="tp2_pkg.html#tp2_pkg.spectro.SpectroAnalysis.filename"><code class="docutils literal notranslate"><span class="pre">SpectroAnalysis.filename</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tp2_pkg.html#tp2_pkg.spectro.SpectroAnalysis.data"><code class="docutils literal notranslate"><span class="pre">SpectroAnalysis.data</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tp2_pkg.html#tp2_pkg.spectro.SpectroAnalysis.noise_signal"><code class="docutils literal notranslate"><span class="pre">SpectroAnalysis.noise_signal</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tp2_pkg.html#tp2_pkg.spectro.SpectroAnalysis.lin_fit_params"><code class="docutils literal notranslate"><span class="pre">SpectroAnalysis.lin_fit_params</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tp2_pkg.html#tp2_pkg.spectro.SpectroAnalysis.data_centered"><code class="docutils literal notranslate"><span class="pre">SpectroAnalysis.data_centered</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tp2_pkg.html#tp2_pkg.spectro.SpectroAnalysis.noise_signal_centered"><code class="docutils literal notranslate"><span class="pre">SpectroAnalysis.noise_signal_centered</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tp2_pkg.html#tp2_pkg.spectro.SpectroAnalysis.core_data"><code class="docutils literal notranslate"><span class="pre">SpectroAnalysis.core_data</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tp2_pkg.html#tp2_pkg.spectro.SpectroAnalysis.fit_params"><code class="docutils literal notranslate"><span class="pre">SpectroAnalysis.fit_params</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tp2_pkg.html#tp2_pkg.spectro.SpectroAnalysis.theta_origin"><code class="docutils literal notranslate"><span class="pre">SpectroAnalysis.theta_origin</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tp2_pkg.html#tp2_pkg.spectro.SpectroAnalysis.theta_new"><code class="docutils literal notranslate"><span class="pre">SpectroAnalysis.theta_new</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tp2_pkg.html#tp2_pkg.spectro.SpectroAnalysis.thin"><code class="docutils literal notranslate"><span class="pre">SpectroAnalysis.thin</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tp2_pkg.html#tp2_pkg.spectro.SpectroAnalysis.__init__"><code class="docutils literal notranslate"><span class="pre">SpectroAnalysis.__init__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tp2_pkg.html#tp2_pkg.spectro.SpectroAnalysis.run_analysis"><code class="docutils literal notranslate"><span class="pre">SpectroAnalysis.run_analysis()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tp2_pkg.html#tp2_pkg.spectro.SpectroAnalysis.read_csv"><code class="docutils literal notranslate"><span class="pre">SpectroAnalysis.read_csv()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tp2_pkg.html#tp2_pkg.spectro.SpectroAnalysis.selection"><code class="docutils literal notranslate"><span class="pre">SpectroAnalysis.selection()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tp2_pkg.html#tp2_pkg.spectro.SpectroAnalysis.linear_model"><code class="docutils literal notranslate"><span class="pre">SpectroAnalysis.linear_model()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tp2_pkg.html#tp2_pkg.spectro.SpectroAnalysis.fit_linear_model"><code class="docutils literal notranslate"><span class="pre">SpectroAnalysis.fit_linear_model()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tp2_pkg.html#tp2_pkg.spectro.SpectroAnalysis.subtract_linear_model"><code class="docutils literal notranslate"><span class="pre">SpectroAnalysis.subtract_linear_model()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tp2_pkg.html#tp2_pkg.spectro.SpectroAnalysis.calculate_std_dev"><code class="docutils literal notranslate"><span class="pre">SpectroAnalysis.calculate_std_dev()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tp2_pkg.html#tp2_pkg.spectro.SpectroAnalysis.gaussian_model"><code class="docutils literal notranslate"><span class="pre">SpectroAnalysis.gaussian_model()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tp2_pkg.html#tp2_pkg.spectro.SpectroAnalysis.fit_OIII"><code class="docutils literal notranslate"><span class="pre">SpectroAnalysis.fit_OIII()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tp2_pkg.html#tp2_pkg.spectro.SpectroAnalysis.plot_data"><code class="docutils literal notranslate"><span class="pre">SpectroAnalysis.plot_data()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tp2_pkg.html#tp2_pkg.spectro.SpectroAnalysis.plot_spectra"><code class="docutils literal notranslate"><span class="pre">SpectroAnalysis.plot_spectra()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tp2_pkg.html#tp2_pkg.spectro.SpectroAnalysis.log_prior"><code class="docutils literal notranslate"><span class="pre">SpectroAnalysis.log_prior()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tp2_pkg.html#tp2_pkg.spectro.SpectroAnalysis.log_likelihood"><code class="docutils literal notranslate"><span class="pre">SpectroAnalysis.log_likelihood()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tp2_pkg.html#tp2_pkg.spectro.SpectroAnalysis.log_probability"><code class="docutils literal notranslate"><span class="pre">SpectroAnalysis.log_probability()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tp2_pkg.html#tp2_pkg.spectro.SpectroAnalysis.parameters_initialisation"><code class="docutils literal notranslate"><span class="pre">SpectroAnalysis.parameters_initialisation()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tp2_pkg.html#tp2_pkg.spectro.SpectroAnalysis.run_mcmc"><code class="docutils literal notranslate"><span class="pre">SpectroAnalysis.run_mcmc()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tp2_pkg.html#tp2_pkg.spectro.SpectroAnalysis.analyze_chains"><code class="docutils literal notranslate"><span class="pre">SpectroAnalysis.analyze_chains()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tp2_pkg.html#tp2_pkg.spectro.SpectroAnalysis.error"><code class="docutils literal notranslate"><span class="pre">SpectroAnalysis.error()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tp2_pkg.html#tp2_pkg.spectro.SpectroAnalysis.__dict__"><code class="docutils literal notranslate"><span class="pre">SpectroAnalysis.__dict__</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tp2_pkg.html#tp2_pkg.spectro.SpectroAnalysis.__module__"><code class="docutils literal notranslate"><span class="pre">SpectroAnalysis.__module__</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tp2_pkg.html#tp2_pkg.spectro.SpectroAnalysis.__weakref__"><code class="docutils literal notranslate"><span class="pre">SpectroAnalysis.__weakref__</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="tp2_pkg.html#module-tp2_pkg">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Pied de page">
+        <a href="tp2_pkg.html" class="btn btn-neutral float-left" title="tp2_pkg package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Précédent</a>
+        <a href="rep.html" class="btn btn-neutral float-right" title="Réponse aux Questions" accesskey="n" rel="next">Suivant <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Droits d'auteur 2024, MT &amp; DB.</p>
+  </div>
+
+  Compilé avec <a href="https://www.sphinx-doc.org/">Sphinx</a> en utilisant un
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">thème</a>
+    fourni par <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
