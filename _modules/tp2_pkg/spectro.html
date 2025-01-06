@@ -1,0 +1,852 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="fr" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>tp2_pkg.spectro &mdash; Documentation TP2 - Inférences et MCMC fr</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../_static/custom.css" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=de646d1a"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../_static/translations.js?v=e6b791cb"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Recherche" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            TP2 - Inférences et MCMC
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Rechercher docs" aria-label="Rechercher docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../tp2_pkg.html">tp2_pkg package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">tp2_pkg</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../rep.html">Réponse aux Questions</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">TP2 - Inférences et MCMC</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Code du module</a></li>
+      <li class="breadcrumb-item active">tp2_pkg.spectro</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Code source de tp2_pkg.spectro</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">emcee</span>
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">arviz</span> <span class="k">as</span> <span class="nn">az</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">from</span> <span class="nn">scipy.optimize</span> <span class="kn">import</span> <span class="n">curve_fit</span>
+<span class="kn">from</span> <span class="nn">getdist</span> <span class="kn">import</span> <span class="n">plots</span><span class="p">,</span> <span class="n">MCSamples</span>
+<span class="kn">from</span> <span class="nn">matplotlib.gridspec</span> <span class="kn">import</span> <span class="n">GridSpec</span>
+<span class="kn">from</span> <span class="nn">emcee.autocorr</span> <span class="kn">import</span> <span class="n">function_1d</span>
+
+<span class="n">version</span> <span class="o">=</span> <span class="s2">&quot;1.0&quot;</span>
+
+<div class="viewcode-block" id="SpectroAnalysis">
+<a class="viewcode-back" href="../../tp2_pkg.html#tp2_pkg.spectro.SpectroAnalysis">[docs]</a>
+<span class="k">class</span> <span class="nc">SpectroAnalysis</span><span class="p">:</span>
+<span class="w">    </span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Classe pour l&#39;analyse spectroscopique d&#39;un spectre de galaxie. Cette classe inclut des fonctionnalités pour </span>
+<span class="sd">    la lecture des données, le traitement de bruit, l&#39;ajustement d&#39;un modèle gaussien avec un continuum linéaire, </span>
+<span class="sd">    et l&#39;analyse des chaînes MCMC.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    filename : String</span>
+<span class="sd">        Chemin vers le fichier contenant les données spectroscopiques.</span>
+<span class="sd">    data : pandas.DataFrame</span>
+<span class="sd">        Données spectroscopiques chargées depuis le fichier.</span>
+<span class="sd">    noise_signal : pandas.DataFrame</span>
+<span class="sd">        Sous-ensemble des données représentant la région du bruit.</span>
+<span class="sd">    lin_fit_params : tuple</span>
+<span class="sd">        Paramètres de l&#39;ajustement linéaire sur le bruit (pente et intercept).</span>
+<span class="sd">    data_centered : pandas.DataFrame</span>
+<span class="sd">        Données après soustraction du modèle linéaire.</span>
+<span class="sd">    noise_signal_centered : pandas.DataFrame</span>
+<span class="sd">        Données de bruit centrées après soustraction du modèle linéaire.</span>
+<span class="sd">    core_data : pandas.DataFrame</span>
+<span class="sd">        Sous-ensemble des données représentant la région centrale contenant les pics OIII.</span>
+<span class="sd">    fit_params : numpy.ndarray</span>
+<span class="sd">        Paramètres du modèle gaussien ajusté aux données centrales.</span>
+<span class="sd">    theta_origin : numpy.ndarray</span>
+<span class="sd">        Meilleurs paramètres initiaux pour MCMC, issus de l&#39;ajustement initial.</span>
+<span class="sd">    theta_new : numpy.ndarray</span>
+<span class="sd">        Meilleurs paramètres finaux obtenus après les analyses MCMC.</span>
+<span class="sd">    thin : int</span>
+<span class="sd">        Largeur de corrélation utilisée pour le sous-échantillonnage des chaînes MCMC.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+<div class="viewcode-block" id="SpectroAnalysis.__init__">
+<a class="viewcode-back" href="../../tp2_pkg.html#tp2_pkg.spectro.SpectroAnalysis.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Description</span>
+<span class="sd">        -----------</span>
+<span class="sd">        Méthode d&#39;initialisation de la classe.</span>
+<span class="sd">        Charge le fichier de données, initialise les paramètres et lance l&#39;analyse complète.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        filename : String</span>
+<span class="sd">            Chemin du fichier avec les données de spectrométrie.</span>
+<span class="sd">                    </span>
+<span class="sd">        Return</span>
+<span class="sd">        ------</span>
+<span class="sd">        None</span>
+<span class="sd">            Cette méthode ne retourne rien.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">filename</span> <span class="o">=</span> <span class="s1">&#39;tp2_pkg/f1245_888.dat&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">noise_signal</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lin_fit_params</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data_centered</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">noise_signal_centered</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">core_data</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fit_params</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">theta_origin</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">theta_new</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">thin</span> <span class="o">=</span> <span class="mi">70</span></div>
+
+
+<div class="viewcode-block" id="SpectroAnalysis.run_analysis">
+<a class="viewcode-back" href="../../tp2_pkg.html#tp2_pkg.spectro.SpectroAnalysis.run_analysis">[docs]</a>
+    <span class="k">def</span> <span class="nf">run_analysis</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Description</span>
+<span class="sd">        -----------</span>
+<span class="sd">        Coeur du programme, effectue l&#39;analyse complète : lecture des données, ajustements, traitement du bruit,</span>
+<span class="sd">        et analyse MCMC.</span>
+<span class="sd">            </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">            None</span>
+<span class="sd">    </span>
+<span class="sd">        Return</span>
+<span class="sd">        ------</span>
+<span class="sd">        numpy.ndarray</span>
+<span class="sd">            Flux ajusté à partir du modèle gaussien.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">read_csv</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">noise_signal</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">selection</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="mi">6600</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fit_linear_model</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data_centered</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">subtract_linear_model</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_centered</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">noise_signal_centered</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">noise_signal</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">subtract_linear_model</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">noise_signal_centered</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">core_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">selection</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="mi">6350</span><span class="p">,</span> <span class="mi">6600</span><span class="p">)</span>
+        <span class="n">fitted_flux</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fit_OIII</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">plot_spectra</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">theta_origin</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fit_params</span>
+        <span class="n">sampler</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_mcmc</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">analyze_chains</span><span class="p">(</span><span class="n">sampler</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">error</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">fitted_flux</span></div>
+
+    
+<div class="viewcode-block" id="SpectroAnalysis.read_csv">
+<a class="viewcode-back" href="../../tp2_pkg.html#tp2_pkg.spectro.SpectroAnalysis.read_csv">[docs]</a>
+    <span class="k">def</span> <span class="nf">read_csv</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Description</span>
+<span class="sd">        -----------</span>
+<span class="sd">        Lit les données spectroscopiques depuis un fichier CSV </span>
+<span class="sd">        et les stocke dans un DataFrame `self.data`.</span>
+<span class="sd">            </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">            None</span>
+
+<span class="sd">        Return</span>
+<span class="sd">        ------</span>
+<span class="sd">        None</span>
+<span class="sd">            Cette méthode ne retourne rien.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">filename</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s2">&quot;,&quot;</span><span class="p">,</span> <span class="n">names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;Wavelength&quot;</span><span class="p">,</span> <span class="s2">&quot;Flux&quot;</span><span class="p">],</span> <span class="n">skiprows</span><span class="o">=</span><span class="mi">1</span>
+            <span class="p">)</span>
+        <span class="k">except</span> <span class="ne">FileNotFoundError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;File &#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">filename</span><span class="si">}</span><span class="s2">&#39; not found.&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SpectroAnalysis.selection">
+<a class="viewcode-back" href="../../tp2_pkg.html#tp2_pkg.spectro.SpectroAnalysis.selection">[docs]</a>
+    <span class="k">def</span> <span class="nf">selection</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">type_data</span><span class="p">,</span> <span class="n">lambda_min</span><span class="p">,</span> <span class="n">lambda_max</span><span class="o">=</span><span class="mf">7274.57784357302</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;        </span>
+<span class="sd">        Description</span>
+<span class="sd">        -----------</span>
+<span class="sd">        Sélectionne un sous-ensemble des données dans la plage donnée </span>
+<span class="sd">        de longueurs d&#39;onde `[lambda_min, lambda_max]`.</span>
+<span class="sd">            </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        type_data : pandas.DataFrame</span>
+<span class="sd">            Ensemble de données spectroscopiques.</span>
+<span class="sd">        lambda_min : float</span>
+<span class="sd">            Longueur d&#39;onde minimale pour la sélection.</span>
+<span class="sd">        lambda_max : float, optionnel</span>
+<span class="sd">            Longueur d&#39;onde maximale pour la sélection, par défaut 7274.57784357302.</span>
+<span class="sd">                </span>
+<span class="sd">        Return</span>
+<span class="sd">        ------</span>
+<span class="sd">        pandas.DataFrame</span>
+<span class="sd">            Données filtrées dans la plage donnée.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="n">type_data</span><span class="p">[</span>
+            <span class="p">(</span><span class="n">type_data</span><span class="p">[</span><span class="s2">&quot;Wavelength&quot;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">lambda_min</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">type_data</span><span class="p">[</span><span class="s2">&quot;Wavelength&quot;</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">lambda_max</span><span class="p">)</span>
+        <span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="SpectroAnalysis.linear_model">
+<a class="viewcode-back" href="../../tp2_pkg.html#tp2_pkg.spectro.SpectroAnalysis.linear_model">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">linear_model</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Description</span>
+<span class="sd">        -----------</span>
+<span class="sd">            Définit un modèle linéaire sous la forme `y = ax + b`.</span>
+<span class="sd">    </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        x : numpy.ndarray</span>
+<span class="sd">            Tableau des abscisses (longueurs d&#39;onde).</span>
+<span class="sd">        a : float</span>
+<span class="sd">            Pente du modèle linéaire.</span>
+<span class="sd">        b : float</span>
+<span class="sd">            Ordonnée à l&#39;origine du modèle linéaire.    </span>
+<span class="sd">        </span>
+<span class="sd">        Return</span>
+<span class="sd">        ------</span>
+<span class="sd">        numpy.ndarray</span>
+<span class="sd">            Valeurs de `y` correspondant aux valeurs de `x`.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="n">a</span> <span class="o">*</span> <span class="n">x</span> <span class="o">+</span> <span class="n">b</span></div>
+
+
+<div class="viewcode-block" id="SpectroAnalysis.fit_linear_model">
+<a class="viewcode-back" href="../../tp2_pkg.html#tp2_pkg.spectro.SpectroAnalysis.fit_linear_model">[docs]</a>
+    <span class="k">def</span> <span class="nf">fit_linear_model</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Description</span>
+<span class="sd">        -----------</span>
+<span class="sd">        Ajuste un modèle linéaire sur les données de bruit et stocke</span>
+<span class="sd">        les paramètres ajustés dans `self.lin_fit_params`.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">            None</span>
+<span class="sd">        </span>
+<span class="sd">        Return</span>
+<span class="sd">        ------</span>
+<span class="sd">        None</span>
+<span class="sd">            Cette méthode ne retourne rien.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">x_noise</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">noise_signal</span><span class="p">[</span><span class="s2">&quot;Wavelength&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+        <span class="n">y_noise</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">noise_signal</span><span class="p">[</span><span class="s2">&quot;Flux&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+        <span class="n">popt</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">curve_fit</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">linear_model</span><span class="p">,</span> <span class="n">x_noise</span><span class="p">,</span> <span class="n">y_noise</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lin_fit_params</span> <span class="o">=</span> <span class="n">popt</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Linear fit completed: a = </span><span class="si">{</span><span class="n">popt</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">, b = </span><span class="si">{</span><span class="n">popt</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SpectroAnalysis.subtract_linear_model">
+<a class="viewcode-back" href="../../tp2_pkg.html#tp2_pkg.spectro.SpectroAnalysis.subtract_linear_model">[docs]</a>
+    <span class="k">def</span> <span class="nf">subtract_linear_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataset</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Description</span>
+<span class="sd">        -----------</span>
+<span class="sd">        Soustrait le modèle linéaire défini par `self.lin_fit_params`</span>
+<span class="sd">        des flux du dataset donné.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        dataset : pandas.DataFrame</span>
+<span class="sd">            Données auxquelles soustraire le modèle linéaire.   </span>
+<span class="sd">        </span>
+<span class="sd">        Return</span>
+<span class="sd">        ------</span>
+<span class="sd">        None</span>
+<span class="sd">            Cette méthode ne retourne rien.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lin_fit_params</span>
+        <span class="n">dataset</span><span class="p">[</span><span class="s2">&quot;Flux&quot;</span><span class="p">]</span> <span class="o">-=</span> <span class="p">(</span><span class="n">a</span> <span class="o">*</span> <span class="n">dataset</span><span class="p">[</span><span class="s2">&quot;Wavelength&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="n">b</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SpectroAnalysis.calculate_std_dev">
+<a class="viewcode-back" href="../../tp2_pkg.html#tp2_pkg.spectro.SpectroAnalysis.calculate_std_dev">[docs]</a>
+    <span class="k">def</span> <span class="nf">calculate_std_dev</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Description</span>
+<span class="sd">        -----------</span>
+<span class="sd">        Calcule l&#39;écart type des flux dans les données de bruit centrées.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">            None</span>
+<span class="sd">    </span>
+<span class="sd">        Return</span>
+<span class="sd">        ------</span>
+<span class="sd">            float</span>
+<span class="sd">                Écart type des flux.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">noise_signal_centered</span><span class="p">[</span><span class="s2">&quot;Flux&quot;</span><span class="p">])</span></div>
+
+
+<div class="viewcode-block" id="SpectroAnalysis.gaussian_model">
+<a class="viewcode-back" href="../../tp2_pkg.html#tp2_pkg.spectro.SpectroAnalysis.gaussian_model">[docs]</a>
+    <span class="k">def</span> <span class="nf">gaussian_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wavelength</span><span class="p">,</span> <span class="n">A</span><span class="p">,</span> <span class="n">sigma_g</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Description</span>
+<span class="sd">        -----------</span>
+<span class="sd">        Définit un modèle avec deux pics gaussiens correspondant aux </span>
+<span class="sd">        raies OIII (4959 et 5007 Å) sur un continuum linéaire.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        wavelength : numpy.ndarray</span>
+<span class="sd">            Tableau des longueurs d&#39;onde.</span>
+<span class="sd">        A : float</span>
+<span class="sd">            Amplitude du premier pic gaussien.</span>
+<span class="sd">        sigma_g : float</span>
+<span class="sd">            Largeur à mi-hauteur des pics gaussiens.</span>
+<span class="sd">        z : float</span>
+<span class="sd">            Redshift.</span>
+<span class="sd">        a : float</span>
+<span class="sd">            Pente du continuum linéaire.</span>
+<span class="sd">        b : float</span>
+<span class="sd">            Ordonnée à l&#39;origine du continuum linéaire.</span>
+<span class="sd">    </span>
+<span class="sd">        Return</span>
+<span class="sd">        ------</span>
+<span class="sd">        numpy.ndarray</span>
+<span class="sd">            Valeurs du modèle pour les longueurs d&#39;onde données.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">mu1</span> <span class="o">=</span> <span class="mi">4959</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">z</span><span class="p">)</span>
+        <span class="n">mu2</span> <span class="o">=</span> <span class="mi">5007</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">z</span><span class="p">)</span>
+        <span class="n">continuum</span> <span class="o">=</span> <span class="n">a</span> <span class="o">*</span> <span class="n">wavelength</span> <span class="o">+</span> <span class="n">b</span>
+        <span class="n">gaussian1</span> <span class="o">=</span> <span class="p">(</span><span class="n">A</span> <span class="o">/</span> <span class="mi">3</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mf">0.5</span> <span class="o">*</span> <span class="p">((</span><span class="n">wavelength</span> <span class="o">-</span> <span class="n">mu1</span><span class="p">)</span> <span class="o">/</span> <span class="n">sigma_g</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="n">gaussian2</span> <span class="o">=</span> <span class="n">A</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mf">0.5</span> <span class="o">*</span> <span class="p">((</span><span class="n">wavelength</span> <span class="o">-</span> <span class="n">mu2</span><span class="p">)</span> <span class="o">/</span> <span class="n">sigma_g</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">continuum</span> <span class="o">+</span> <span class="n">gaussian1</span> <span class="o">+</span> <span class="n">gaussian2</span></div>
+
+
+<div class="viewcode-block" id="SpectroAnalysis.fit_OIII">
+<a class="viewcode-back" href="../../tp2_pkg.html#tp2_pkg.spectro.SpectroAnalysis.fit_OIII">[docs]</a>
+    <span class="k">def</span> <span class="nf">fit_OIII</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Description</span>
+<span class="sd">        -----------</span>
+<span class="sd">        Ajuste un modèle gaussien avec un continuum linéaire sur les pics OIII</span>
+<span class="sd">        et stocke les paramètres ajustés dans `self.fit_params`.</span>
+<span class="sd">    </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">            None</span>
+<span class="sd">    </span>
+<span class="sd">        Return</span>
+<span class="sd">        ------</span>
+<span class="sd">        numpy.ndarray</span>
+<span class="sd">            Flux ajusté à partir du modèle.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">wavelengths</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">core_data</span><span class="p">[</span><span class="s2">&quot;Wavelength&quot;</span><span class="p">]</span>
+        <span class="n">fluxes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">core_data</span><span class="p">[</span><span class="s2">&quot;Flux&quot;</span><span class="p">]</span>
+        <span class="n">sigma</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full_like</span><span class="p">(</span><span class="n">fluxes</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">calculate_std_dev</span><span class="p">())</span>
+        <span class="n">initial_params</span> <span class="o">=</span> <span class="p">[</span><span class="mf">9.0e-16</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">,</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">lin_fit_params</span><span class="p">]</span>
+        <span class="n">popt</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">curve_fit</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gaussian_model</span><span class="p">,</span> <span class="n">wavelengths</span><span class="p">,</span> <span class="n">fluxes</span><span class="p">,</span> <span class="n">p0</span><span class="o">=</span><span class="n">initial_params</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="n">sigma</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fit_params</span> <span class="o">=</span> <span class="n">popt</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">popt</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;La valeur du redshift est : </span><span class="si">{</span><span class="n">popt</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">gaussian_model</span><span class="p">(</span><span class="n">wavelengths</span><span class="p">,</span> <span class="o">*</span><span class="n">popt</span><span class="p">)</span>    </div>
+
+
+<div class="viewcode-block" id="SpectroAnalysis.plot_data">
+<a class="viewcode-back" href="../../tp2_pkg.html#tp2_pkg.spectro.SpectroAnalysis.plot_data">[docs]</a>
+    <span class="k">def</span> <span class="nf">plot_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">x_label</span><span class="p">,</span> <span class="n">y_label</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">colors</span><span class="p">,</span> <span class="n">styles</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Description</span>
+<span class="sd">        -----------</span>
+<span class="sd">        Génère un graphique personnalisé avec les courbes données.</span>
+<span class="sd">    </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        title : String</span>
+<span class="sd">            Titre du graphique.</span>
+<span class="sd">        x : list of numpy.ndarray</span>
+<span class="sd">            Liste des tableaux pour les abscisses.</span>
+<span class="sd">        y : list of numpy.ndarray</span>
+<span class="sd">            Liste des tableaux pour les ordonnées.</span>
+<span class="sd">        x_label : String</span>
+<span class="sd">            Nom de l&#39;axe des abscisses.</span>
+<span class="sd">        y_label : String</span>
+<span class="sd">            Nom de l&#39;axe des ordonnées.</span>
+<span class="sd">        labels : list of String</span>
+<span class="sd">            Liste des légendes pour chaque courbe.</span>
+<span class="sd">        colors : list of String</span>
+<span class="sd">            Liste des couleurs pour chaque courbe.</span>
+<span class="sd">        styles : list of String, optionnel</span>
+<span class="sd">            Liste des styles de ligne pour chaque courbe. Le défaut est None.</span>
+<span class="sd">    </span>
+<span class="sd">        Return</span>
+<span class="sd">        ------</span>
+<span class="sd">        None</span>
+<span class="sd">            Cette méthode ne retourne rien.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)):</span>
+            <span class="n">style</span> <span class="o">=</span> <span class="n">styles</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">if</span> <span class="n">styles</span> <span class="k">else</span> <span class="s2">&quot;-&quot;</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">y</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">style</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="n">labels</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="n">colors</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="n">title</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="n">x_label</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="n">y_label</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">()</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="SpectroAnalysis.plot_spectra">
+<a class="viewcode-back" href="../../tp2_pkg.html#tp2_pkg.spectro.SpectroAnalysis.plot_spectra">[docs]</a>
+    <span class="k">def</span> <span class="nf">plot_spectra</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Description</span>
+<span class="sd">        -----------</span>
+<span class="sd">        Produit un ensemble de sous-graphiques pour visualiser le spectre, </span>
+<span class="sd">        le bruit, les données centrées et l&#39;ajustement du modèle.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">            None</span>
+<span class="sd">        </span>
+<span class="sd">        Return</span>
+<span class="sd">        ------</span>
+<span class="sd">        None</span>
+<span class="sd">            Cette méthode ne retourne rien.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">8</span><span class="p">))</span>
+        <span class="n">gs</span> <span class="o">=</span> <span class="n">GridSpec</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">figure</span><span class="o">=</span><span class="n">fig</span><span class="p">)</span>
+        
+        <span class="c1"># Plot 1: Galaxy Spectrum</span>
+        <span class="n">axs1</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="n">gs</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+        <span class="n">axs1</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;Wavelength&quot;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;Flux&quot;</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;purple&quot;</span><span class="p">)</span>
+        <span class="n">axs1</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Spectre de la Galaxie&quot;</span><span class="p">)</span>
+        <span class="n">axs1</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Longueur d&#39;onde (Å)&quot;</span><span class="p">)</span>
+        <span class="n">axs1</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Flux&quot;</span><span class="p">)</span>
+        
+        <span class="c1"># Plot 2: Noise Spectrum with Linear Fit</span>
+        <span class="n">axs2</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="n">gs</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+        <span class="n">axs2</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">noise_signal</span><span class="p">[</span><span class="s2">&quot;Wavelength&quot;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">noise_signal</span><span class="p">[</span><span class="s2">&quot;Flux&quot;</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;blue&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Spectre de bruit&quot;</span><span class="p">)</span>
+        <span class="n">axs2</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">noise_signal</span><span class="p">[</span><span class="s2">&quot;Wavelength&quot;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">linear_model</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">noise_signal</span><span class="p">[</span><span class="s2">&quot;Wavelength&quot;</span><span class="p">],</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">lin_fit_params</span><span class="p">),</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;green&quot;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;--&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Fit linéaire&quot;</span><span class="p">)</span>
+        <span class="n">axs2</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Spectre du bruit de la galaxie avec un fit linéaire&quot;</span><span class="p">)</span>
+        <span class="n">axs2</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Longueur d&#39;onde (Å)&quot;</span><span class="p">)</span>
+        <span class="n">axs2</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Flux&quot;</span><span class="p">)</span>
+        <span class="n">axs2</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+        
+        <span class="c1"># Plot 3: Centered Galaxy Spectrum</span>
+        <span class="n">axs3</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="n">gs</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+        <span class="n">axs3</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_centered</span><span class="p">[</span><span class="s2">&quot;Wavelength&quot;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_centered</span><span class="p">[</span><span class="s2">&quot;Flux&quot;</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;purple&quot;</span><span class="p">)</span>
+        <span class="n">axs3</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Spectre de la galaxie centré&quot;</span><span class="p">)</span>
+        <span class="n">axs3</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Longueur d&#39;onde (Å)&quot;</span><span class="p">)</span>
+        <span class="n">axs3</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Flux&quot;</span><span class="p">)</span>
+        
+        <span class="c1"># Plot 4: Centered Noise Spectrum</span>
+        <span class="n">axs4</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="n">gs</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+        <span class="n">axs4</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">noise_signal_centered</span><span class="p">[</span><span class="s2">&quot;Wavelength&quot;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">noise_signal_centered</span><span class="p">[</span><span class="s2">&quot;Flux&quot;</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;blue&quot;</span><span class="p">)</span>
+        <span class="n">axs4</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Spectre du bruit centré&quot;</span><span class="p">)</span>
+        <span class="n">axs4</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Longueur d&#39;onde (Å)&quot;</span><span class="p">)</span>
+        <span class="n">axs4</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Flux&quot;</span><span class="p">)</span>
+        
+        <span class="c1"># Plot 5: Galaxy Spectrum with Gaussian Fit (Occupy Full Width)</span>
+        <span class="n">fitted_flux</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fit_OIII</span><span class="p">()</span>
+        <span class="n">axs5</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="n">gs</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="p">:])</span>  <span class="c1"># This will span the entire last row</span>
+        <span class="n">axs5</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">core_data</span><span class="p">[</span><span class="s2">&quot;Wavelength&quot;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">core_data</span><span class="p">[</span><span class="s2">&quot;Flux&quot;</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;purple&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Spectre de l&#39;émission OIII&quot;</span><span class="p">)</span>
+        <span class="n">axs5</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">core_data</span><span class="p">[</span><span class="s2">&quot;Wavelength&quot;</span><span class="p">],</span> <span class="n">fitted_flux</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;orange&quot;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;--&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Fit du modèle&quot;</span><span class="p">)</span>
+        <span class="n">axs5</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Raies d&#39;émission OIII avec fit d&#39;une double gaussienne&quot;</span><span class="p">)</span>
+        <span class="n">axs5</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Longueur d&#39;onde (Å)&quot;</span><span class="p">)</span>
+        <span class="n">axs5</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Flux&quot;</span><span class="p">)</span>
+        <span class="n">axs5</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+        
+        <span class="c1"># Adjust layout</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">(</span><span class="n">rect</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mf">0.96</span><span class="p">])</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span></div>
+
+        
+<div class="viewcode-block" id="SpectroAnalysis.log_prior">
+<a class="viewcode-back" href="../../tp2_pkg.html#tp2_pkg.spectro.SpectroAnalysis.log_prior">[docs]</a>
+    <span class="k">def</span> <span class="nf">log_prior</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">theta</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Description</span>
+<span class="sd">        -----------</span>
+<span class="sd">        Calcule la probabilité a priori des paramètres selon des limites définies.</span>
+<span class="sd">    </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        theta : numpy.ndarray</span>
+<span class="sd">            Tableau des paramètres du modèle.</span>
+<span class="sd">    </span>
+<span class="sd">        Return</span>
+<span class="sd">        ------</span>
+<span class="sd">        float</span>
+<span class="sd">            Logarithme de la probabilité a priori.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">cdt_A</span> <span class="o">=</span> <span class="n">theta</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">theta</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mf">19e-16</span>
+        <span class="n">cdt_sigma_g</span> <span class="o">=</span> <span class="n">theta</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">theta</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">6</span>
+        <span class="n">cdt_z</span> <span class="o">=</span> <span class="n">theta</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mf">0.25</span> <span class="ow">and</span> <span class="n">theta</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mf">0.35</span>
+        <span class="n">cdt_a</span> <span class="o">=</span> <span class="n">theta</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">&gt;</span> <span class="o">-</span><span class="mi">1</span> <span class="ow">and</span> <span class="n">theta</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">1</span>
+        <span class="n">cdt_b</span> <span class="o">=</span> <span class="n">theta</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">&gt;</span> <span class="o">-</span><span class="mi">1</span> <span class="ow">and</span> <span class="n">theta</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">1</span>
+
+        <span class="k">if</span> <span class="n">cdt_A</span> <span class="ow">and</span> <span class="n">cdt_sigma_g</span> <span class="ow">and</span> <span class="n">cdt_z</span> <span class="ow">and</span> <span class="n">cdt_a</span> <span class="ow">and</span> <span class="n">cdt_b</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mf">0.0</span>
+        <span class="k">return</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span></div>
+
+
+<div class="viewcode-block" id="SpectroAnalysis.log_likelihood">
+<a class="viewcode-back" href="../../tp2_pkg.html#tp2_pkg.spectro.SpectroAnalysis.log_likelihood">[docs]</a>
+    <span class="k">def</span> <span class="nf">log_likelihood</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">theta</span><span class="p">,</span> <span class="n">wavelengths</span><span class="p">,</span> <span class="n">fluxes</span><span class="p">,</span> <span class="n">flux_errors</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Description</span>
+<span class="sd">        -----------</span>
+<span class="sd">        Calcule la vraisemblance logarithmique pour un ensemble de paramètres donnés.</span>
+<span class="sd">    </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        theta : numpy.ndarray</span>
+<span class="sd">            Tableau des paramètres du modèle.</span>
+<span class="sd">        wavelengths : numpy.ndarray</span>
+<span class="sd">            Tableau des longueurs d&#39;onde.</span>
+<span class="sd">        fluxes : numpy.ndarray</span>
+<span class="sd">            Tableau des flux observés.</span>
+<span class="sd">        flux_errors : numpy.ndarray</span>
+<span class="sd">            Tableau des erreurs sur les flux.</span>
+<span class="sd">    </span>
+<span class="sd">        Return</span>
+<span class="sd">        ------</span>
+<span class="sd">        float</span>
+<span class="sd">            Logarithme de la vraisemblance.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">model_flux</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gaussian_model</span><span class="p">(</span><span class="n">wavelengths</span><span class="p">,</span> <span class="o">*</span><span class="n">theta</span><span class="p">)</span>
+        <span class="k">return</span> <span class="o">-</span><span class="mf">0.5</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(((</span><span class="n">fluxes</span> <span class="o">-</span> <span class="n">model_flux</span><span class="p">)</span> <span class="o">/</span> <span class="n">flux_errors</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SpectroAnalysis.log_probability">
+<a class="viewcode-back" href="../../tp2_pkg.html#tp2_pkg.spectro.SpectroAnalysis.log_probability">[docs]</a>
+    <span class="k">def</span> <span class="nf">log_probability</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">theta</span><span class="p">,</span> <span class="n">wavelengths</span><span class="p">,</span> <span class="n">fluxes</span><span class="p">,</span> <span class="n">flux_errors</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Description</span>
+<span class="sd">        -----------</span>
+<span class="sd">        Calcule la probabilité totale (prior + likelihood) pour un ensemble de paramètres donnés.</span>
+<span class="sd">    </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        theta : numpy.ndarray</span>
+<span class="sd">            Tableau des paramètres du modèle.</span>
+<span class="sd">        wavelengths : numpy.ndarray</span>
+<span class="sd">            Tableau des longueurs d&#39;onde.</span>
+<span class="sd">        fluxes : numpy.ndarray</span>
+<span class="sd">            Tableau des flux observés.</span>
+<span class="sd">        flux_errors : numpy.ndarray</span>
+<span class="sd">            Tableau des erreurs sur les flux.</span>
+<span class="sd">    </span>
+<span class="sd">        Return</span>
+<span class="sd">        ------</span>
+<span class="sd">        float</span>
+<span class="sd">            Logarithme de la probabilité totale.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">lp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">log_prior</span><span class="p">(</span><span class="n">theta</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">lp</span><span class="p">):</span>
+            <span class="k">return</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span>
+        <span class="k">return</span> <span class="n">lp</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">log_likelihood</span><span class="p">(</span><span class="n">theta</span><span class="p">,</span> <span class="n">wavelengths</span><span class="p">,</span> <span class="n">fluxes</span><span class="p">,</span> <span class="n">flux_errors</span><span class="p">)</span></div>
+
+    
+<div class="viewcode-block" id="SpectroAnalysis.parameters_initialisation">
+<a class="viewcode-back" href="../../tp2_pkg.html#tp2_pkg.spectro.SpectroAnalysis.parameters_initialisation">[docs]</a>
+    <span class="k">def</span> <span class="nf">parameters_initialisation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">best_param</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Description</span>
+<span class="sd">        -----------</span>
+<span class="sd">        Initialise les positions des marcheurs pour le MCMC en ajoutant des variations </span>
+<span class="sd">        gaussiennes autour des meilleurs paramètres initiaux.</span>
+<span class="sd">    </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        best_param : numpy.ndarray</span>
+<span class="sd">            Paramètres initiaux optimaux obtenus par ajustement.</span>
+<span class="sd">    </span>
+<span class="sd">        Return</span>
+<span class="sd">        ------</span>
+<span class="sd">        tuple</span>
+<span class="sd">            Position initiale des marcheurs, nombre de marcheurs, et nombre de dimensions.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">initial_params</span> <span class="o">=</span> <span class="n">best_param</span>
+        
+        <span class="n">ndim</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">initial_params</span><span class="p">)</span>
+        <span class="n">n_walkers</span> <span class="o">=</span> <span class="mi">10</span> <span class="o">*</span> <span class="n">ndim</span>
+        <span class="n">initial_positions</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n_walkers</span><span class="p">,</span> <span class="n">ndim</span><span class="p">))</span>
+        
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">ndim</span><span class="p">):</span>
+            <span class="n">scale</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">initial_params</span><span class="p">[</span><span class="n">i</span><span class="p">])))</span> <span class="k">if</span> <span class="n">initial_params</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">0</span> <span class="k">else</span> <span class="mi">0</span>
+            <span class="n">initial_positions</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">initial_params</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="o">*</span><span class="mi">10</span><span class="o">**</span><span class="p">(</span><span class="n">scale</span><span class="o">-</span><span class="mi">3</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">n_walkers</span><span class="p">)</span>
+        
+        <span class="k">return</span> <span class="n">initial_positions</span><span class="p">,</span> <span class="n">n_walkers</span><span class="p">,</span> <span class="n">ndim</span></div>
+
+    
+<div class="viewcode-block" id="SpectroAnalysis.run_mcmc">
+<a class="viewcode-back" href="../../tp2_pkg.html#tp2_pkg.spectro.SpectroAnalysis.run_mcmc">[docs]</a>
+    <span class="k">def</span> <span class="nf">run_mcmc</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_steps</span><span class="o">=</span> <span class="mi">10000</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Description</span>
+<span class="sd">        -----------</span>
+<span class="sd">        Effectue deux étapes de MCMC pour ajustement des paramètres et </span>
+<span class="sd">        retourne les résultats.</span>
+<span class="sd">    </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        n_steps : int, optionnel</span>
+<span class="sd">            Nombre d&#39;étapes pour le MCMC. Le défaut est 10000.</span>
+<span class="sd">    </span>
+<span class="sd">        Return</span>
+<span class="sd">        ------</span>
+<span class="sd">        tuple</span>
+<span class="sd">            Sampler MCMC et échantillons aplatis après burn-in.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        
+        <span class="n">best_params</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">theta_origin</span>
+        <span class="n">initial_positions</span><span class="p">,</span> <span class="n">n_walkers</span><span class="p">,</span> <span class="n">ndim</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters_initialisation</span><span class="p">(</span><span class="n">best_params</span><span class="p">)</span>        
+        
+        <span class="n">sampler</span> <span class="o">=</span> <span class="n">emcee</span><span class="o">.</span><span class="n">EnsembleSampler</span><span class="p">(</span>
+            <span class="n">n_walkers</span><span class="p">,</span> 
+            <span class="n">ndim</span><span class="p">,</span> 
+            <span class="bp">self</span><span class="o">.</span><span class="n">log_probability</span><span class="p">,</span>
+            <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">core_data</span><span class="p">[</span><span class="s2">&quot;Wavelength&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">,</span>
+                  <span class="bp">self</span><span class="o">.</span><span class="n">core_data</span><span class="p">[</span><span class="s2">&quot;Flux&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">,</span>
+                  <span class="bp">self</span><span class="o">.</span><span class="n">calculate_std_dev</span><span class="p">()</span>
+                  <span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Running first MCMC...&quot;</span><span class="p">)</span>
+        <span class="n">sampler</span><span class="o">.</span><span class="n">run_mcmc</span><span class="p">(</span><span class="n">initial_positions</span><span class="p">,</span> <span class="n">n_steps</span><span class="p">,</span> <span class="n">progress</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="n">flat_samples</span> <span class="o">=</span> <span class="n">sampler</span><span class="o">.</span><span class="n">get_chain</span><span class="p">(</span><span class="n">discard</span><span class="o">=</span><span class="n">n_steps</span><span class="o">//</span><span class="mi">5</span><span class="p">,</span> <span class="n">thin</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">thin</span><span class="p">,</span> <span class="n">flat</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">log_prob</span> <span class="o">=</span> <span class="n">sampler</span><span class="o">.</span><span class="n">get_log_prob</span><span class="p">(</span><span class="n">discard</span><span class="o">=</span><span class="n">n_steps</span><span class="o">//</span><span class="mi">5</span><span class="p">,</span> <span class="n">thin</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">thin</span><span class="p">,</span> <span class="n">flat</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">best_idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">log_prob</span><span class="p">)</span> <span class="c1">#reviens à minimiser le chi carré</span>
+        <span class="n">best_params</span> <span class="o">=</span> <span class="n">flat_samples</span><span class="p">[</span><span class="n">best_idx</span><span class="p">]</span>
+        
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Meilleurs lot de paramètres du MCMC_1:&quot;</span><span class="p">,</span> <span class="n">best_params</span><span class="p">)</span>
+        
+        <span class="c1">###############</span>
+        <span class="c1"># SECOND MCMC #</span>
+        <span class="c1">###############</span>
+        
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Running second MCMC...&quot;</span><span class="p">)</span>
+        
+        <span class="n">initial_positions</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters_initialisation</span><span class="p">(</span><span class="n">best_params</span><span class="p">)</span>  
+        
+        <span class="n">sampler</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+        
+        <span class="n">sampler</span><span class="o">.</span><span class="n">run_mcmc</span><span class="p">(</span><span class="n">initial_positions</span><span class="p">,</span> <span class="n">n_steps</span><span class="p">,</span> <span class="n">progress</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        
+        <span class="n">flat_samples</span> <span class="o">=</span> <span class="n">sampler</span><span class="o">.</span><span class="n">get_chain</span><span class="p">(</span><span class="n">discard</span><span class="o">=</span><span class="n">n_steps</span><span class="o">//</span><span class="mi">5</span><span class="p">,</span> <span class="n">thin</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">thin</span><span class="p">,</span> <span class="n">flat</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">log_prob</span> <span class="o">=</span> <span class="n">sampler</span><span class="o">.</span><span class="n">get_log_prob</span><span class="p">(</span><span class="n">discard</span><span class="o">=</span><span class="n">n_steps</span><span class="o">//</span><span class="mi">5</span><span class="p">,</span> <span class="n">thin</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">thin</span><span class="p">,</span> <span class="n">flat</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">best_idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">log_prob</span><span class="p">)</span>
+        <span class="n">best_params</span> <span class="o">=</span> <span class="n">flat_samples</span><span class="p">[</span><span class="n">best_idx</span><span class="p">]</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Best parameters from MCMC:&quot;</span><span class="p">,</span> <span class="n">best_params</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">sampler</span></div>
+
+
+<div class="viewcode-block" id="SpectroAnalysis.analyze_chains">
+<a class="viewcode-back" href="../../tp2_pkg.html#tp2_pkg.spectro.SpectroAnalysis.analyze_chains">[docs]</a>
+    <span class="k">def</span> <span class="nf">analyze_chains</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sampler</span><span class="p">,</span> <span class="n">labels</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;A&quot;</span><span class="p">,</span> <span class="s2">&quot;sigma_g&quot;</span><span class="p">,</span> <span class="s2">&quot;z&quot;</span><span class="p">,</span> <span class="s2">&quot;a&quot;</span><span class="p">,</span> <span class="s2">&quot;b&quot;</span><span class="p">]):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Description</span>
+<span class="sd">        -----------</span>
+<span class="sd">        Analyse les chaînes MCMC : convergence, temps d&#39;auto-corrélation, </span>
+<span class="sd">        et estimation des paramètres. Donne la valeur du redshift calculée.</span>
+<span class="sd">    </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        sampler : emcee.EnsembleSampler</span>
+<span class="sd">            Objet contenant les chaînes MCMC.</span>
+<span class="sd">        flat_samples : numpy.ndarray</span>
+<span class="sd">            Échantillons aplatis après burn-in.</span>
+<span class="sd">        labels : list of String, optionnel</span>
+<span class="sd">            Noms des paramètres, par défaut [&quot;A&quot;, &quot;sigma_g&quot;, &quot;z&quot;, &quot;a&quot;, &quot;b&quot;].</span>
+<span class="sd">    </span>
+<span class="sd">        Return</span>
+<span class="sd">        ------</span>
+<span class="sd">        None</span>
+<span class="sd">            Cette méthode ne retourne rien.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="c1"># Obtenir les chaînes brutes et leurs dimensions</span>
+        <span class="n">chains</span> <span class="o">=</span> <span class="n">sampler</span><span class="o">.</span><span class="n">get_chain</span><span class="p">()</span>
+        <span class="n">n_steps</span><span class="p">,</span> <span class="n">n_walkers</span><span class="p">,</span> <span class="n">ndim</span> <span class="o">=</span> <span class="n">chains</span><span class="o">.</span><span class="n">shape</span>
+    
+
+        
+        <span class="c1"># Étude de la convergence via R-hat</span>
+        <span class="n">az_data</span> <span class="o">=</span> <span class="n">az</span><span class="o">.</span><span class="n">from_emcee</span><span class="p">(</span><span class="n">sampler</span><span class="p">)</span>
+        <span class="n">rhat_values</span> <span class="o">=</span> <span class="n">az</span><span class="o">.</span><span class="n">rhat</span><span class="p">(</span><span class="n">az_data</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Diagnostic de convergence (R-hat) :&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">label</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">labels</span><span class="p">):</span>
+            <span class="n">var_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;var_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;R-hat pour </span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2"> : </span><span class="si">{</span><span class="n">rhat_values</span><span class="p">[</span><span class="n">var_name</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        
+        <span class="c1"># Étude des temps d&#39;auto-corrélation</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">autocorr_times</span> <span class="o">=</span> <span class="n">sampler</span><span class="o">.</span><span class="n">get_autocorr_time</span><span class="p">()</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Temps d&#39;auto-corrélation estimés :&quot;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">ndim</span><span class="p">):</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  </span><span class="si">{</span><span class="n">labels</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="si">}</span><span class="s2"> : </span><span class="si">{</span><span class="n">autocorr_times</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Temps d&#39;auto-corrélation non disponibles : chaîne trop courte : </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span> <span class="p">)</span>
+            <span class="n">autocorr_times</span> <span class="o">=</span> <span class="kc">None</span>
+        
+        <span class="n">fig</span><span class="p">,</span> <span class="n">axs</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">ndim</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">ndim</span><span class="p">),</span> <span class="n">sharex</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">fig</span><span class="o">.</span><span class="n">suptitle</span><span class="p">(</span><span class="s2">&quot;Auto-correlation for Parameters&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
+        
+        <span class="n">t_z</span> <span class="o">=</span> <span class="n">autocorr_times</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+        <span class="n">T_z</span><span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">t_z</span><span class="p">)</span>
+        <span class="n">flat_samples</span> <span class="o">=</span> <span class="n">sampler</span><span class="o">.</span><span class="n">get_chain</span><span class="p">(</span><span class="n">discard</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">thin</span><span class="o">=</span><span class="n">T_z</span><span class="p">,</span> <span class="n">flat</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        
+        <span class="c1"># Tracé des distributions et des corrélations</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="s1">&#39;all&#39;</span><span class="p">)</span>
+        <span class="n">mc_samples</span> <span class="o">=</span> <span class="n">MCSamples</span><span class="p">(</span><span class="n">samples</span><span class="o">=</span><span class="n">flat_samples</span><span class="p">,</span> <span class="n">names</span><span class="o">=</span><span class="n">labels</span><span class="p">,</span> <span class="n">labels</span><span class="o">=</span><span class="n">labels</span><span class="p">)</span>
+        <span class="n">g</span> <span class="o">=</span> <span class="n">plots</span><span class="o">.</span><span class="n">get_subplot_plotter</span><span class="p">()</span>
+        <span class="n">g</span><span class="o">.</span><span class="n">triangle_plot</span><span class="p">(</span><span class="n">mc_samples</span><span class="p">,</span> <span class="n">filled</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+        
+        <span class="c1"># Tracer la fonction d&#39;auto-corrélation pour chaque paramètre sur échelle logarithmique</span>
+        <span class="n">fig</span><span class="p">,</span> <span class="n">axs</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">ndim</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">ndim</span><span class="p">),</span> <span class="n">sharex</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">fig</span><span class="o">.</span><span class="n">suptitle</span><span class="p">(</span><span class="s2">&quot;Fonction d&#39;Auto-corrélation pour chaque paramètre&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
+        
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">ndim</span><span class="p">):</span>
+            <span class="c1"># Calculer la fonction d&#39;auto-corrélation pour le paramètre i</span>
+            <span class="n">chains_1d</span> <span class="o">=</span> <span class="n">chains</span><span class="p">[:,</span> <span class="p">:,</span> <span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+            <span class="n">autocorr</span> <span class="o">=</span> <span class="n">function_1d</span><span class="p">(</span><span class="n">chains_1d</span><span class="p">)</span>
+            
+            <span class="c1"># Tracer la fonction d&#39;auto-corrélation en fonction du pas du MCMC</span>
+            <span class="n">axs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">autocorr</span><span class="p">)),</span> <span class="n">autocorr</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Paramètre </span><span class="si">{</span><span class="n">labels</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">axs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Auto-corrélation pour </span><span class="si">{</span><span class="n">labels</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">axs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;ACF&quot;</span><span class="p">)</span>
+        
+        <span class="n">axs</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Lag (log scale)&quot;</span><span class="p">)</span>
+        <span class="n">axs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_xscale</span><span class="p">(</span><span class="s1">&#39;log&#39;</span><span class="p">)</span>  <span class="c1"># Appliquer l&#39;échelle logarithmique à l&#39;axe des x</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">(</span><span class="n">rect</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mf">0.96</span><span class="p">])</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+        
+        <span class="c1"># Calcul du redshift z </span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;=&quot;</span> <span class="o">*</span> <span class="mi">56</span><span class="p">)</span>             
+        <span class="n">z_samples</span> <span class="o">=</span> <span class="n">flat_samples</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span>
+        <span class="n">z_mean</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">z_samples</span><span class="p">)</span>
+        <span class="n">z_std</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">z_samples</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Redshift éstimé : </span><span class="si">{</span><span class="n">z_mean</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2"> +/- </span><span class="si">{</span><span class="n">z_std</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>    
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;=&quot;</span> <span class="o">*</span> <span class="mi">56</span><span class="p">)</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">z_mean</span> <span class="o">=</span> <span class="n">z_mean</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">z_std</span> <span class="o">=</span> <span class="n">z_std</span></div>
+
+        
+<div class="viewcode-block" id="SpectroAnalysis.error">
+<a class="viewcode-back" href="../../tp2_pkg.html#tp2_pkg.spectro.SpectroAnalysis.error">[docs]</a>
+    <span class="k">def</span> <span class="nf">error</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calcule l&#39;erreur  des données par rapport à une valeur théorique donnée.</span>
+
+<span class="sd">        Description</span>
+<span class="sd">        -----------</span>
+<span class="sd">        Cette méthode calcule l&#39;erreur des données en comparant l&#39;écart-type (`z_std`) </span>
+<span class="sd">        et la moyenne (`z_mean`) des valeurs observées avec une valeur de référence (`z_th`) et son </span>
+<span class="sd">        incertitude (`z_err_th`). Le résultat est imprimé avec une comparaison à la valeur théorique.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">            None</span>
+<span class="sd">            Cette méthode ne prend pas de paramètre.</span>
+
+<span class="sd">        Return</span>
+<span class="sd">        ------</span>
+<span class="sd">        None</span>
+<span class="sd">            Cette méthode ne retourne rien mais imprime l&#39;erreur calculée.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">z_th</span> <span class="o">=</span> <span class="mf">0.296340</span>
+        
+        <span class="n">err</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">z_th</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">z_mean</span><span class="p">)</span>
+        
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;L&#39;erreur est : </span><span class="si">{</span><span class="n">err</span><span class="si">}</span><span class="s2"> par rapport à la valeur théorique : </span><span class="si">{</span><span class="n">z_th</span><span class="si">}</span><span class="s2"> +/- </span><span class="si">{</span><span class="n">z_err_th</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Droits d'auteur 2024, MT &amp; DB.</p>
+  </div>
+
+  Compilé avec <a href="https://www.sphinx-doc.org/">Sphinx</a> en utilisant un
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">thème</a>
+    fourni par <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
