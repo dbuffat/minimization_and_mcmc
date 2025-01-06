@@ -12,9 +12,15 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
+      - name: Move docs to public directory
+        run: |
+          mkdir public
+          mv docs/_build/html/* public
+
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
-          publish_dir: ./docs/_build/html
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./public
+          github_token: ${{ secrets.GH_TOKEN }}
+
 
