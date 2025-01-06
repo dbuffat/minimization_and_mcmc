@@ -10,6 +10,7 @@ dist/
 .coverage
 
 # Autres fichiers spécifiques au projet
+docs/
 htmlcov/
 tests/*/
 tp1_pkg/*.csv

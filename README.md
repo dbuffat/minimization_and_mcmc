@@ -1,7 +1,5 @@
 # TP2 - Inférence Bayésienne - MCMC
 
-Lien de la page GitLab avec la documentation  https://m2cosmo-tp2-167ad6.pages.in2p3.fr/index.html
-
 
 # Contents:
 
